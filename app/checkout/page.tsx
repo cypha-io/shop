@@ -26,6 +26,9 @@ const INITIAL_FORM: CheckoutForm = {
   paymentMethod: 'mobile-money',
 };
 
+const normalizePhoneInput = (value: string) => value.replace(/\D/g, '').slice(0, 10);
+const isValidPhone = (value: string) => /^0\d{9}$/.test(value);
+
 export default function CheckoutPage() {
   const { items, clearCart } = useCart();
   const [form, setForm] = useState<CheckoutForm>(INITIAL_FORM);
@@ -53,7 +56,7 @@ export default function CheckoutPage() {
   const canPlaceOrder =
     items.length > 0 &&
     form.fullName.trim() &&
-    form.phone.trim() &&
+    isValidPhone(form.phone.trim()) &&
     form.address.trim() &&
     form.city.trim();
 
@@ -70,7 +73,7 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: form.fullName,
-          phone: form.phone,
+          phone: normalizePhoneInput(form.phone),
           email: form.email,
           address: form.address,
           city: form.city,
@@ -142,8 +145,11 @@ export default function CheckoutPage() {
                 <input
                   type="tel"
                   value={form.phone}
-                  onChange={(e) => onChange('phone', e.target.value)}
-                  placeholder="Phone"
+                  onChange={(e) => onChange('phone', normalizePhoneInput(e.target.value))}
+                  inputMode="numeric"
+                  pattern="0[0-9]{9}"
+                  maxLength={10}
+                  placeholder="0XXXXXXXXX"
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
                   required
                 />

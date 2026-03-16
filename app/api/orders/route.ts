@@ -30,6 +30,8 @@ type CheckoutPayload = {
   items: CheckoutItemInput[];
 };
 
+const isValidPhone = (value: string) => /^0\d{9}$/.test(value);
+
 const parsePrice = (value: string) => {
   const numeric = Number(String(value).replace(/[^0-9.]/g, ''));
   return Number.isFinite(numeric) ? numeric : 0;
@@ -40,40 +42,84 @@ export async function GET() {
 
   try {
     client = await pool.connect();
-    const result = await client.query(`
-      SELECT
-        o.id,
-        o."orderNumber",
-        o."customerName",
-        o.phone,
-        o.email,
-        o.address,
-        o.city,
-        o.notes,
-        o."paymentMethod",
-        o.status,
-        o.subtotal,
-        o.delivery,
-        o.total,
-        o."createdAt",
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id', oi.id,
-              'productId', oi."productId",
-              'productName', oi."productName",
-              'price', oi.price,
-              'quantity', oi.quantity,
-              'lineTotal', oi."lineTotal"
-            )
-          ) FILTER (WHERE oi.id IS NOT NULL),
-          '[]'::json
-        ) AS items
-      FROM "Order" o
-      LEFT JOIN "OrderItem" oi ON oi."orderId" = o.id
-      GROUP BY o.id
-      ORDER BY o."createdAt" DESC
-    `);
+    let result;
+    try {
+      result = await client.query(`
+        SELECT
+          o.id,
+          o."orderNumber",
+          o."customerName",
+          o.phone,
+          o.email,
+          o.address,
+          o.city,
+          o.notes,
+          o."paymentMethod",
+          COALESCE(o."paymentCompleted", FALSE) AS "paymentCompleted",
+          o.status,
+          o.subtotal,
+          o.delivery,
+          o.total,
+          o."createdAt",
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', oi.id,
+                'productId', oi."productId",
+                'productName', oi."productName",
+                'price', oi.price,
+                'quantity', oi.quantity,
+                'lineTotal', oi."lineTotal"
+              )
+            ) FILTER (WHERE oi.id IS NOT NULL),
+            '[]'::json
+          ) AS items
+        FROM "Order" o
+        LEFT JOIN "OrderItem" oi ON oi."orderId" = o.id
+        GROUP BY o.id
+        ORDER BY o."createdAt" DESC
+      `);
+    } catch (error) {
+      if ((error as { code?: string }).code !== '42703') {
+        throw error;
+      }
+
+      result = await client.query(`
+        SELECT
+          o.id,
+          o."orderNumber",
+          o."customerName",
+          o.phone,
+          o.email,
+          o.address,
+          o.city,
+          o.notes,
+          o."paymentMethod",
+          FALSE AS "paymentCompleted",
+          o.status,
+          o.subtotal,
+          o.delivery,
+          o.total,
+          o."createdAt",
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', oi.id,
+                'productId', oi."productId",
+                'productName', oi."productName",
+                'price', oi.price,
+                'quantity', oi.quantity,
+                'lineTotal', oi."lineTotal"
+              )
+            ) FILTER (WHERE oi.id IS NOT NULL),
+            '[]'::json
+          ) AS items
+        FROM "Order" o
+        LEFT JOIN "OrderItem" oi ON oi."orderId" = o.id
+        GROUP BY o.id
+        ORDER BY o."createdAt" DESC
+      `);
+    }
 
     return Response.json(result.rows, {
       headers: {
@@ -101,6 +147,10 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required customer details' }, { status: 400 });
     }
 
+    if (!isValidPhone(body.phone.trim())) {
+      return Response.json({ error: 'Phone must be 10 digits and start with 0' }, { status: 400 });
+    }
+
     if (!Array.isArray(body.items) || body.items.length === 0) {
       return Response.json({ error: 'Cart is empty' }, { status: 400 });
     }
@@ -108,26 +158,57 @@ export async function POST(request: Request) {
     client = await pool.connect();
     await client.query('BEGIN');
 
-    const orderInsert = await client.query(
-      `
-      INSERT INTO "Order"
-      ("customerName", phone, email, address, city, notes, "paymentMethod", status, subtotal, delivery, total)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 'Pending', $8, $9, $10)
-      RETURNING id
-      `,
-      [
-        body.fullName.trim(),
-        body.phone.trim(),
-        body.email?.trim() || null,
-        body.address.trim(),
-        body.city.trim(),
-        body.notes?.trim() || null,
-        body.paymentMethod,
-        body.subtotal,
-        body.delivery,
-        body.total,
-      ]
-    );
+    const paymentCompleted = body.paymentMethod === 'card' || body.paymentMethod === 'mobile-money';
+
+    let orderInsert;
+    try {
+      orderInsert = await client.query(
+        `
+        INSERT INTO "Order"
+        ("customerName", phone, email, address, city, notes, "paymentMethod", "paymentCompleted", status, subtotal, delivery, total)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Pending', $9, $10, $11)
+        RETURNING id
+        `,
+        [
+          body.fullName.trim(),
+          body.phone.trim(),
+          body.email?.trim() || null,
+          body.address.trim(),
+          body.city.trim(),
+          body.notes?.trim() || null,
+          body.paymentMethod,
+          paymentCompleted,
+          body.subtotal,
+          body.delivery,
+          body.total,
+        ]
+      );
+    } catch (error) {
+      if ((error as { code?: string }).code !== '42703') {
+        throw error;
+      }
+
+      orderInsert = await client.query(
+        `
+        INSERT INTO "Order"
+        ("customerName", phone, email, address, city, notes, "paymentMethod", status, subtotal, delivery, total)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'Pending', $8, $9, $10)
+        RETURNING id
+        `,
+        [
+          body.fullName.trim(),
+          body.phone.trim(),
+          body.email?.trim() || null,
+          body.address.trim(),
+          body.city.trim(),
+          body.notes?.trim() || null,
+          body.paymentMethod,
+          body.subtotal,
+          body.delivery,
+          body.total,
+        ]
+      );
+    }
 
     const orderId = orderInsert.rows[0].id as number;
     const orderNumber = `WF-${String(orderId).padStart(6, '0')}`;

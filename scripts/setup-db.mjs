@@ -20,7 +20,12 @@ async function main() {
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         price VARCHAR(50) NOT NULL,
+        "regularPrice" VARCHAR(50),
+        "salePrice" VARCHAR(50),
+        "hasVariations" BOOLEAN NOT NULL DEFAULT FALSE,
+        variations JSONB NOT NULL DEFAULT '[]'::jsonb,
         image TEXT NOT NULL,
+        "imageUrls" JSONB NOT NULL DEFAULT '[]'::jsonb,
         category VARCHAR(100) NOT NULL,
         description TEXT,
         "isFeatured" BOOLEAN DEFAULT FALSE,
@@ -32,6 +37,13 @@ async function main() {
     // Handle existing tables from older app versions.
     await client.query('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS description TEXT');
     await client.query('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "isFeatured" BOOLEAN DEFAULT FALSE');
+    await client.query('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "regularPrice" VARCHAR(50)');
+    await client.query('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "salePrice" VARCHAR(50)');
+    await client.query('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "hasVariations" BOOLEAN NOT NULL DEFAULT FALSE');
+    await client.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS variations JSONB NOT NULL DEFAULT '[]'::jsonb`);
+    await client.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "imageUrls" JSONB NOT NULL DEFAULT '[]'::jsonb`);
+    await client.query('UPDATE "Product" SET "regularPrice" = price WHERE "regularPrice" IS NULL AND price IS NOT NULL');
+    await client.query(`UPDATE "Product" SET "imageUrls" = jsonb_build_array(image) WHERE ("imageUrls" IS NULL OR jsonb_typeof("imageUrls") <> 'array' OR jsonb_array_length("imageUrls") = 0) AND image IS NOT NULL`);
 
     console.log('Creating/updating orders tables...');
     await client.query(`
@@ -45,6 +57,7 @@ async function main() {
         city VARCHAR(120) NOT NULL,
         notes TEXT,
         "paymentMethod" VARCHAR(40) NOT NULL,
+        "paymentCompleted" BOOLEAN NOT NULL DEFAULT FALSE,
         status VARCHAR(40) NOT NULL DEFAULT 'Pending',
         subtotal NUMERIC(12,2) NOT NULL,
         delivery NUMERIC(12,2) NOT NULL,
@@ -53,6 +66,8 @@ async function main() {
         "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    await client.query('ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "paymentCompleted" BOOLEAN NOT NULL DEFAULT FALSE');
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS "OrderItem" (
@@ -68,6 +83,84 @@ async function main() {
     `);
 
     await client.query('CREATE INDEX IF NOT EXISTS order_item_order_id_idx ON "OrderItem" ("orderId")');
+
+    console.log('Creating/updating user profiles table...');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "UserProfile" (
+        id SERIAL PRIMARY KEY,
+        "fullName" VARCHAR(255) NOT NULL,
+        phone VARCHAR(100) NOT NULL UNIQUE,
+        role VARCHAR(40) NOT NULL DEFAULT 'user',
+        "passwordHash" TEXT,
+        email VARCHAR(255),
+        address TEXT,
+        city VARCHAR(120),
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query("ALTER TABLE \"UserProfile\" ADD COLUMN IF NOT EXISTS role VARCHAR(40) NOT NULL DEFAULT 'user'");
+    await client.query('ALTER TABLE "UserProfile" ADD COLUMN IF NOT EXISTS "passwordHash" TEXT');
+
+    // Normalize invalid roles and enforce strict role set.
+    await client.query("UPDATE \"UserProfile\" SET role = 'user' WHERE role IS NULL OR role NOT IN ('user', 'admin')");
+    await client.query('ALTER TABLE "UserProfile" ALTER COLUMN role SET DEFAULT \'user\'');
+    await client.query('ALTER TABLE "UserProfile" ALTER COLUMN role SET NOT NULL');
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_constraint
+          WHERE conname = 'user_profile_role_check'
+            AND conrelid = '"UserProfile"'::regclass
+        ) THEN
+          ALTER TABLE "UserProfile"
+          ADD CONSTRAINT user_profile_role_check
+          CHECK (role IN ('user', 'admin'));
+        END IF;
+      END
+      $$;
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "UserSession" (
+        id SERIAL PRIMARY KEY,
+        "userProfileId" INTEGER NOT NULL REFERENCES "UserProfile"(id) ON DELETE CASCADE,
+        "tokenHash" TEXT NOT NULL UNIQUE,
+        "expiresAt" TIMESTAMP NOT NULL,
+        "lastSeenAt" TIMESTAMP,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "PasswordReset" (
+        id SERIAL PRIMARY KEY,
+        "userProfileId" INTEGER NOT NULL REFERENCES "UserProfile"(id) ON DELETE CASCADE,
+        "codeHash" TEXT NOT NULL,
+        "expiresAt" TIMESTAMP NOT NULL,
+        "usedAt" TIMESTAMP,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query('CREATE INDEX IF NOT EXISTS user_session_user_profile_id_idx ON "UserSession" ("userProfileId")');
+    await client.query('CREATE INDEX IF NOT EXISTS password_reset_user_profile_id_idx ON "PasswordReset" ("userProfileId")');
+
+    console.log('Creating/updating categories table...');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "Category" (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(120) NOT NULL,
+        slug VARCHAR(140) NOT NULL UNIQUE,
+        "imageUrl" TEXT,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await client.query('ALTER TABLE "Category" ADD COLUMN IF NOT EXISTS "imageUrl" TEXT');
 
     // Remove duplicate rows from earlier seed runs before adding uniqueness guard.
     await client.query(`

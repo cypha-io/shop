@@ -8,6 +8,8 @@ type ProductCardItem = {
   id: number | string;
   name: string;
   price: string;
+  regularPrice?: string | null;
+  salePrice?: string | null;
   image: string;
   category?: string;
 };
@@ -27,40 +29,55 @@ export default function ProductCard({
   showCategory = true,
   showViewLabel = true,
 }: ProductCardProps) {
+  const formatCedi = (value: string) => {
+    const normalized = value.trim();
+    if (!normalized) return 'GH₵0';
+    if (normalized.includes('₵') || normalized.toUpperCase().startsWith('GH')) return normalized;
+    return `GH₵${normalized}`;
+  };
+
   const cardHref = href ?? `/products/${product.id}`;
   const isCompact = size === 'compact';
+  const normalizedRegularPrice = product.regularPrice?.trim() || '';
+  const normalizedSalePrice = product.salePrice?.trim() || '';
+  const hasSale = normalizedSalePrice.length > 0;
+  const displayPrice = formatCedi(hasSale ? normalizedSalePrice : normalizedRegularPrice || product.price);
+  const showStruckRegular = hasSale && normalizedRegularPrice.length > 0 && normalizedRegularPrice !== normalizedSalePrice;
+  const regularPriceLabel = formatCedi(normalizedRegularPrice);
 
   return (
-    <Link href={cardHref} className="group block">
-      <div
-        className={`relative bg-gray-100 rounded-2xl overflow-hidden shadow-sm group-hover:shadow-xl transition-shadow mb-4 ${
-          isCompact ? 'h-40' : 'h-56'
-        }`}
-      >
+    <Link
+      href={cardHref}
+      className="group block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+    >
+      <div className={`relative overflow-hidden bg-slate-100 ${isCompact ? 'h-36' : 'h-52'}`}>
         <Image
           src={product.image}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
         />
 
         {showCategory && product.category ? (
-          <span className="absolute top-3 left-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-gray-800">
+          <span className="absolute left-3 top-3 rounded-full border border-white/70 bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-slate-700 backdrop-blur">
             {product.category}
           </span>
         ) : null}
 
-        <span className="absolute top-2 right-2 w-10 h-10 bg-pink-400 rounded-full flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-lg">
-          <FiShoppingCart className="text-gray-900 text-lg" />
+        <span className="absolute bottom-3 right-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white/90 text-slate-700 shadow-sm backdrop-blur">
+          <FiShoppingCart className="text-base" />
         </span>
       </div>
 
-      <div className="text-center">
-        <h3 className={`font-bold text-gray-800 mb-2 ${isCompact ? 'text-sm' : 'text-base mb-3'}`}>{product.name}</h3>
-        <div className={`bg-pink-600 rounded-lg inline-block ${isCompact ? 'px-3 py-1.5' : 'px-4 py-2 mb-2'}`}>
-          <p className={`text-white font-black ${isCompact ? 'text-sm' : 'text-base'}`}>{product.price}</p>
+      <div className={isCompact ? 'p-3 text-center' : 'p-4 text-center'}>
+        <h3 className={`line-clamp-2 font-semibold text-slate-900 ${isCompact ? 'text-base' : 'text-lg'}`}>{product.name}</h3>
+
+        <div className="mt-2 flex items-end justify-center gap-2">
+          <p className={`font-extrabold text-pink-600 ${isCompact ? 'text-lg' : 'text-2xl'}`}>{displayPrice}</p>
+          {showStruckRegular ? <p className="text-sm font-semibold text-slate-400 line-through">{regularPriceLabel}</p> : null}
         </div>
-        {showViewLabel ? <p className="text-sm text-pink-600 font-semibold mt-2">View details</p> : null}
+
+        {showViewLabel ? <p className="mt-2 text-sm font-medium text-slate-500">View details</p> : null}
       </div>
     </Link>
   );

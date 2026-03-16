@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FiArrowLeft } from 'react-icons/fi';
@@ -8,6 +7,7 @@ import pg from 'pg';
 import AddToCartButton from '@/components/AddToCartButton';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ProductImageGallery from '@/components/ProductImageGallery';
 
 const { Pool } = pg;
 
@@ -22,7 +22,10 @@ type MenuProduct = {
   id: number;
   name: string;
   price: string;
+  regularPrice?: string | null;
+  salePrice?: string | null;
   image: string;
+  imageUrls?: string[] | null;
   category: string;
   description?: string;
 };
@@ -77,6 +80,26 @@ export default async function MenuProductPage({ params }: PageProps) {
     notFound();
   }
 
+  const formatCedi = (value: string) => {
+    const normalized = value.trim();
+    if (!normalized) return 'GH₵0';
+    if (normalized.includes('₵') || normalized.toUpperCase().startsWith('GH')) return normalized;
+    return `GH₵${normalized}`;
+  };
+
+  const normalizedRegularPrice = product.regularPrice?.trim() || '';
+  const normalizedSalePrice = product.salePrice?.trim() || '';
+  const galleryImages = Array.isArray(product.imageUrls) && product.imageUrls.length > 0 ? product.imageUrls : [product.image];
+  const hasSale = normalizedSalePrice.length > 0;
+  const displayPrice = formatCedi(hasSale ? normalizedSalePrice : normalizedRegularPrice || product.price);
+  const regularPriceLabel = formatCedi(normalizedRegularPrice || product.price);
+  const showStruckRegular = hasSale && regularPriceLabel !== displayPrice;
+
+  const cartProduct = {
+    ...product,
+    price: displayPrice,
+  };
+
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
 
   return (
@@ -94,9 +117,7 @@ export default async function MenuProductPage({ params }: PageProps) {
 
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
           <div className="grid grid-cols-1 md:grid-cols-2">
-            <div className="relative h-80 md:h-[520px] bg-gray-100">
-              <Image src={product.image} alt={product.name} fill className="object-cover" priority />
-            </div>
+            <ProductImageGallery images={galleryImages} productName={product.name} />
 
             <div className="p-6 md:p-10 flex flex-col">
               <div className="mb-4 inline-flex items-center gap-2 self-start rounded-full bg-pink-100 px-4 py-2 text-sm font-bold text-pink-700">
@@ -111,10 +132,13 @@ export default async function MenuProductPage({ params }: PageProps) {
 
               <div className="mt-auto">
                 <p className="text-sm font-semibold text-gray-500 mb-2">Price</p>
-                <p className="text-3xl md:text-4xl font-black text-pink-600 mb-6">{product.price}</p>
+                <div className="mb-6 flex items-end gap-3">
+                  <p className="text-3xl md:text-4xl font-black text-pink-600">{displayPrice}</p>
+                  {showStruckRegular ? <p className="text-lg font-semibold text-gray-400 line-through">{regularPriceLabel}</p> : null}
+                </div>
 
                 <AddToCartButton
-                  product={product}
+                  product={cartProduct}
                   className="w-full md:w-auto inline-flex items-center justify-center gap-3 rounded-xl bg-pink-600 px-6 py-4 text-white font-bold hover:bg-pink-700 transition-colors"
                 />
               </div>

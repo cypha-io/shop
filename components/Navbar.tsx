@@ -1,16 +1,52 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { IoHomeSharp } from 'react-icons/io5';
-import { FiGrid, FiShoppingCart, FiClock, FiUser } from 'react-icons/fi';
+import { FiGrid, FiShoppingCart, FiClock, FiUser, FiLayout } from 'react-icons/fi';
 import { useCart } from '@/hooks/useCart';
 
 export default function Navbar() {
   const pathname = usePathname();
   const { totalItems } = useCart();
+  const [authState, setAuthState] = useState<{ isLoggedIn: boolean; role?: 'user' | 'admin' }>({
+    isLoggedIn: false,
+  });
   const badgeText = totalItems > 99 ? '99+' : String(totalItems);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (!response.ok) {
+          setAuthState({ isLoggedIn: false });
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          authenticated?: boolean;
+          profile?: { role?: 'user' | 'admin' };
+        };
+        setAuthState({
+          isLoggedIn: Boolean(payload.authenticated),
+          role: payload.profile?.role,
+        });
+      } catch {
+        setAuthState({ isLoggedIn: false });
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const profileHref = authState.isLoggedIn
+    ? authState.role === 'admin'
+      ? '/admin/dashboard'
+      : '/dashboard'
+    : '/account';
+  const ProfileIcon = authState.isLoggedIn ? FiLayout : FiUser;
 
   return (
     <>
@@ -76,20 +112,20 @@ export default function Navbar() {
             {/* Account Section */}
             <div className="hidden md:flex items-center pl-4">
               <Link
-                href="/account"
+                href={profileHref}
                 className="flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 hover:bg-pink-600 hover:text-white transition-colors"
               >
-                <FiUser className="text-2xl" />
+                <ProfileIcon className="text-2xl" />
               </Link>
             </div>
 
             {/* Account Section - Mobile */}
             <div className="md:hidden flex items-center">
               <Link
-                href="/account"
+                href={profileHref}
                 className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-pink-600 hover:text-white transition-colors"
               >
-                <FiUser className="text-lg" />
+                <ProfileIcon className="text-lg" />
               </Link>
             </div>
           </div>

@@ -9,6 +9,8 @@ export interface ProductViewItem {
   id: number | string;
   name: string;
   price: string;
+  regularPrice?: string | null;
+  salePrice?: string | null;
   image?: string;
   category?: string;
   description?: string;
@@ -30,8 +32,22 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
 
   const isOpen = Boolean(product);
 
+  const formatCedi = (value: string) => {
+    const normalized = value.trim();
+    if (!normalized) return 'GH₵0';
+    if (normalized.includes('₵') || normalized.toUpperCase().startsWith('GH')) return normalized;
+    return `GH₵${normalized}`;
+  };
+
   const parsePrice = (price: string) => Number(price.replace(/[^0-9.]/g, ''));
-  const baseTotal = product ? parsePrice(product.price) * quantity : 0;
+  const normalizedRegularPrice = product?.regularPrice?.trim() || '';
+  const normalizedSalePrice = product?.salePrice?.trim() || '';
+  const hasSale = normalizedSalePrice.length > 0;
+  const effectivePriceLabel = formatCedi(hasSale ? normalizedSalePrice : normalizedRegularPrice || product?.price || '0');
+  const showStruckRegular = hasSale && normalizedRegularPrice.length > 0 && normalizedRegularPrice !== normalizedSalePrice;
+  const regularPriceLabel = formatCedi(normalizedRegularPrice);
+
+  const baseTotal = product ? parsePrice(effectivePriceLabel) * quantity : 0;
   const discountAmount = baseTotal * discountRate;
   const total = baseTotal - discountAmount;
 
@@ -111,7 +127,7 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
       {
         id: Number(product.id),
         name: product.name,
-        price: product.price,
+        price: effectivePriceLabel,
         image,
         category: product.category,
       },
@@ -206,7 +222,8 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <p className="text-xs text-gray-500 font-semibold">Price</p>
-                <div className="text-lg font-black text-pink-600">{product?.price}</div>
+                <div className="text-lg font-black text-pink-600">{effectivePriceLabel}</div>
+                {showStruckRegular && <div className="text-xs font-semibold text-gray-400 line-through">{regularPriceLabel}</div>}
               </div>
               <div className="flex items-center gap-3">
                 <button
