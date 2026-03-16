@@ -5,9 +5,12 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { IoHomeSharp } from 'react-icons/io5';
 import { FiGrid, FiShoppingCart, FiClock, FiUser } from 'react-icons/fi';
+import { useCart } from '@/hooks/useCart';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { totalItems } = useCart();
+  const badgeText = totalItems > 99 ? '99+' : String(totalItems);
 
   return (
     <>
@@ -56,7 +59,7 @@ export default function Navbar() {
                 <FiShoppingCart className="text-2xl" />
                 <span className="font-bold text-lg">Cart</span>
                 <span className="absolute -top-1 left-4 bg-pink-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
-                  0
+                  {badgeText}
                 </span>
               </Link>
               <Link
@@ -123,7 +126,7 @@ export default function Navbar() {
             <FiShoppingCart className="text-lg" />
             {pathname === '/cart' && <span className="font-bold text-sm">Cart</span>}
             <span className="absolute -top-0.5 left-2 bg-pink-600 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center border border-white">
-              0
+              {badgeText}
             </span>
           </Link>
           <Link

@@ -33,6 +33,42 @@ async function main() {
     await client.query('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS description TEXT');
     await client.query('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "isFeatured" BOOLEAN DEFAULT FALSE');
 
+    console.log('Creating/updating orders tables...');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "Order" (
+        id SERIAL PRIMARY KEY,
+        "orderNumber" VARCHAR(40) UNIQUE,
+        "customerName" VARCHAR(255) NOT NULL,
+        phone VARCHAR(100) NOT NULL,
+        email VARCHAR(255),
+        address TEXT NOT NULL,
+        city VARCHAR(120) NOT NULL,
+        notes TEXT,
+        "paymentMethod" VARCHAR(40) NOT NULL,
+        status VARCHAR(40) NOT NULL DEFAULT 'Pending',
+        subtotal NUMERIC(12,2) NOT NULL,
+        delivery NUMERIC(12,2) NOT NULL,
+        total NUMERIC(12,2) NOT NULL,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "OrderItem" (
+        id SERIAL PRIMARY KEY,
+        "orderId" INTEGER NOT NULL REFERENCES "Order"(id) ON DELETE CASCADE,
+        "productId" INTEGER REFERENCES "Product"(id) ON DELETE SET NULL,
+        "productName" VARCHAR(255) NOT NULL,
+        price NUMERIC(12,2) NOT NULL,
+        quantity INTEGER NOT NULL,
+        "lineTotal" NUMERIC(12,2) NOT NULL,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query('CREATE INDEX IF NOT EXISTS order_item_order_id_idx ON "OrderItem" ("orderId")');
+
     // Remove duplicate rows from earlier seed runs before adding uniqueness guard.
     await client.query(`
       DELETE FROM "Product" a

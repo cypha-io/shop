@@ -95,16 +95,8 @@ export default function SplashScreen() {
         />
       </div>
 
-      {/* Brand name */}
-      <h1 className="text-3xl font-black text-gray-800 tracking-tight mb-2">
-        Wig Factory
-      </h1>
-      <p className="text-sm text-gray-400 tracking-widest uppercase">
-        Premium Wigs &amp; Hair
-      </p>
-
       {/* Loading bar */}
-      <div className="mt-10 w-48 h-1 bg-gray-100 rounded-full overflow-hidden">
+      <div className="mt-6 w-48 h-1 bg-gray-100 rounded-full overflow-hidden">
         <div className="h-full bg-pink-500 rounded-full animate-loading-bar" />
       </div>
     </div>

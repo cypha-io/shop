@@ -1,25 +1,68 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { FiClock, FiCheckCircle, FiXCircle, FiSearch, FiFilter } from 'react-icons/fi';
 
-export default function HistoryPage() {
-  const [statusFilter, setStatusFilter] = useState<'all' | 'Delivered' | 'Cancelled'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+type OrderItem = {
+  id: number;
+  productName: string;
+  quantity: number;
+  lineTotal: number;
+};
 
-  const orders = [
-    { id: '#12345', date: '2026-02-10', items: 'Straight Wig, Body Wave Bundle', total: 'GH₵180', status: 'Delivered' },
-    { id: '#12344', date: '2026-02-08', items: 'Lace Frontal Wig, Hair Extensions', total: 'GH₵275', status: 'Delivered' },
-    { id: '#12343', date: '2026-02-05', items: 'Premium Silk Wig Package', total: 'GH₵350', status: 'Cancelled' },
-  ];
+type Order = {
+  id: number;
+  orderNumber: string;
+  createdAt: string;
+  status: 'Pending' | 'Delivered' | 'Cancelled';
+  total: number;
+  items: OrderItem[];
+};
+
+export default function HistoryPage() {
+  const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'Delivered' | 'Cancelled'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/orders');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = (await response.json()) as Order[];
+        setOrders(data);
+        setError('');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load orders');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, []);
+
+  const deliveredCount = useMemo(
+    () => orders.filter(order => order.status === 'Delivered').length,
+    [orders]
+  );
+
+  const pendingCount = useMemo(
+    () => orders.filter(order => order.status === 'Pending').length,
+    [orders]
+  );
 
   const filteredOrders = orders.filter((order) => {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    const itemNames = order.items.map(item => item.productName).join(', ');
     const matchesSearch =
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.items.toLowerCase().includes(searchQuery.toLowerCase());
+      order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      itemNames.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -48,10 +91,11 @@ export default function HistoryPage() {
               <FiFilter className="text-gray-500" />
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'Delivered' | 'Cancelled')}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'Pending' | 'Delivered' | 'Cancelled')}
                 className="text-sm font-semibold text-gray-700 focus:outline-none bg-transparent"
               >
                 <option value="all">All</option>
+                <option value="Pending">Pending</option>
                 <option value="Delivered">Delivered</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
@@ -75,7 +119,7 @@ export default function HistoryPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-semibold">Delivered</p>
-                <p className="text-2xl font-black text-gray-900">{orders.filter(order => order.status === 'Delivered').length}</p>
+                <p className="text-2xl font-black text-gray-900">{deliveredCount}</p>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center">
                 <FiCheckCircle size={20} />
@@ -85,8 +129,8 @@ export default function HistoryPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-semibold">Cancelled</p>
-                <p className="text-2xl font-black text-gray-900">{orders.filter(order => order.status === 'Cancelled').length}</p>
+                <p className="text-sm text-gray-500 font-semibold">Pending</p>
+                <p className="text-2xl font-black text-gray-900">{pendingCount}</p>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-pink-50 text-pink-600 flex items-center justify-center">
                 <FiXCircle size={20} />
@@ -95,37 +139,53 @@ export default function HistoryPage() {
           </div>
         </div>
 
+        {error && (
+          <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 mb-6">
+            <p className="text-sm font-semibold text-pink-700">Failed to load orders: {error}</p>
+          </div>
+        )}
+
+        {loading && (
+          <div className="text-center py-12">
+            <p className="text-gray-600">Loading orders...</p>
+          </div>
+        )}
+
         <div className="space-y-4">
-          {filteredOrders.map((order) => (
+          {!loading && filteredOrders.map((order) => (
             <div key={order.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-sm font-bold text-gray-500">Order</span>
-                    <span className="text-lg font-black text-gray-900">{order.id}</span>
+                    <span className="text-lg font-black text-gray-900">{order.orderNumber}</span>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      order.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-pink-100 text-pink-700'
+                      order.status === 'Delivered'
+                        ? 'bg-green-100 text-green-700'
+                        : order.status === 'Cancelled'
+                          ? 'bg-pink-100 text-pink-700'
+                          : 'bg-yellow-100 text-yellow-700'
                     }`}>
                       {order.status}
                     </span>
                   </div>
-                  <p className="text-gray-600 text-sm mb-1">{order.date}</p>
-                  <p className="text-gray-800 font-medium">{order.items}</p>
+                  <p className="text-gray-600 text-sm mb-1">{new Date(order.createdAt).toLocaleDateString()}</p>
+                  <p className="text-gray-800 font-medium">
+                    {order.items.map(item => `${item.productName} x${item.quantity}`).join(', ')}
+                  </p>
                 </div>
                 <div className="flex flex-col items-start lg:items-end gap-3">
-                  <p className="font-black text-2xl text-pink-600">{order.total}</p>
-                  <div className="flex items-center gap-2">
-                    <button className="px-4 py-2 rounded-full bg-gray-900 text-white text-sm font-bold hover:bg-gray-800">
-                      Reorder
-                    </button>
-                    <button className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 text-sm font-bold hover:bg-gray-200">
-                      View Details
-                    </button>
-                  </div>
+                  <p className="font-black text-2xl text-pink-600">GH₵{Number(order.total).toFixed(2)}</p>
                 </div>
               </div>
             </div>
           ))}
+
+          {!loading && filteredOrders.length === 0 && (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
+              <p className="text-gray-600">No orders found.</p>
+            </div>
+          )}
         </div>
       </main>
 

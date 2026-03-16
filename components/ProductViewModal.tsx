@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { FiShoppingCart } from 'react-icons/fi';
+import { addToCart } from '@/hooks/useCart';
 
 export interface ProductViewItem {
   id: number | string;
@@ -33,18 +34,6 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
   const baseTotal = product ? parsePrice(product.price) * quantity : 0;
   const discountAmount = baseTotal * discountRate;
   const total = baseTotal - discountAmount;
-
-  useEffect(() => {
-    if (product) {
-      setQuantity(1);
-      setPromoCode('');
-      setAppliedPromo(null);
-      setDiscountRate(0);
-      setPromoError('');
-      setTouchStartY(null);
-      setTouchDelta(0);
-    }
-  }, [product]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -112,6 +101,25 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
     }
   };
 
+  const handleAddToCart = () => {
+    if (!product) return;
+    const image = product.image && (product.image.startsWith('http') || product.image.startsWith('data:'))
+      ? product.image
+      : '/logo.png';
+
+    addToCart(
+      {
+        id: Number(product.id),
+        name: product.name,
+        price: product.price,
+        image,
+        category: product.category,
+      },
+      quantity
+    );
+    onClose();
+  };
+
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     setTouchStartY(event.touches[0]?.clientY ?? null);
   };
@@ -148,6 +156,7 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
       />
       <div className="absolute inset-x-0 bottom-0 flex justify-center">
         <div
+          key={product ? String(product.id) : 'closed'}
           className={`w-full max-w-2xl bg-white rounded-t-3xl shadow-2xl ${
             touchStartY === null ? 'transition-transform duration-300' : ''
           }`}
@@ -219,6 +228,8 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
               <button
                 className="w-12 h-12 bg-pink-600 hover:bg-pink-700 text-white rounded-full flex items-center justify-center transition-colors"
                 aria-label="Add to cart"
+                onClick={handleAddToCart}
+                type="button"
               >
                 <FiShoppingCart className="text-lg" />
               </button>

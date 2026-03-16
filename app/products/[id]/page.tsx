@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { FiArrowLeft, FiShoppingCart, FiTag } from 'react-icons/fi';
+import { FiArrowLeft, FiTag } from 'react-icons/fi';
 import pg from 'pg';
 
+import AddToCartButton from '@/components/AddToCartButton';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -104,10 +105,10 @@ export default async function ProductPage({ params }: PageProps) {
                 <p className="text-sm font-semibold text-gray-500 mb-2">Price</p>
                 <p className="text-3xl md:text-4xl font-black text-pink-600 mb-6">{product.price}</p>
 
-                <button className="w-full md:w-auto inline-flex items-center justify-center gap-3 rounded-xl bg-pink-600 px-6 py-4 text-white font-bold hover:bg-pink-700 transition-colors">
-                  <FiShoppingCart className="text-lg" />
-                  Add to cart
-                </button>
+                <AddToCartButton
+                  product={product}
+                  className="w-full md:w-auto inline-flex items-center justify-center gap-3 rounded-xl bg-pink-600 px-6 py-4 text-white font-bold hover:bg-pink-700 transition-colors"
+                />
               </div>
             </div>
           </div>

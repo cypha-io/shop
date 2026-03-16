@@ -1,33 +1,32 @@
 'use client';
 
-import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FiTrash2, FiPlus, FiMinus } from 'react-icons/fi';
+import { useCart } from '@/hooks/useCart';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState([
-    { id: 1, name: 'Straight Hair Wig', price: 85, quantity: 2, image: 'https://images.unsplash.com/photo-1595980519145-bc96e929d76c?w=400&q=80' },
-    { id: 2, name: 'Body Wave 24"', price: 95, quantity: 1, image: 'https://images.unsplash.com/photo-1562322633-91bd282ca975?w=400&q=80' },
-    { id: 3, name: 'Kinky Curly Bundle', price: 120, quantity: 1, image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&q=80' },
-  ]);
+  const { items: cartItems, updateCartItemQuantity, removeCartItem } = useCart();
+
+  const parsePrice = (value: string) => {
+    const numeric = Number(String(value).replace(/[^0-9.]/g, ''));
+    return Number.isFinite(numeric) ? numeric : 0;
+  };
 
   const updateQuantity = (id: number, delta: number) => {
-    setCartItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-      )
-    );
+    const item = cartItems.find(cartItem => cartItem.id === id);
+    if (!item) return;
+    updateCartItemQuantity(id, Math.max(1, item.quantity + delta));
   };
 
   const removeItem = (id: number) => {
-    setCartItems(items => items.filter(item => item.id !== id));
+    removeCartItem(id);
   };
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const delivery = 10;
+  const subtotal = cartItems.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
+  const delivery = cartItems.length > 0 ? 10 : 0;
   const total = subtotal + delivery;
 
   return (
@@ -49,7 +48,7 @@ export default function CartPage() {
                   
                   <div className="flex-1">
                     <h3 className="font-black text-lg text-gray-800">{item.name}</h3>
-                    <p className="text-pink-600 font-bold">GH₵{item.price}</p>
+                    <p className="text-pink-600 font-bold">{item.price}</p>
                   </div>
 
                   <div className="flex items-center justify-between sm:justify-start gap-3">
@@ -81,27 +80,30 @@ export default function CartPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-bold">GH₵{subtotal}</span>
+                  <span className="font-bold">GH₵{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Delivery</span>
-                  <span className="font-bold">GH₵{delivery}</span>
+                  <span className="font-bold">GH₵{delivery.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-3 flex justify-between">
                   <span className="font-black text-lg">Total</span>
-                  <span className="font-black text-xl text-pink-600">GH₵{total}</span>
+                  <span className="font-black text-xl text-pink-600">GH₵{total.toFixed(2)}</span>
                 </div>
               </div>
 
-              <button className="w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-3.5 sm:py-4 rounded-xl font-black text-base sm:text-lg hover:from-pink-500 hover:to-pink-400 transition-all">
+              <Link
+                href="/checkout"
+                className="block w-full text-center bg-gradient-to-r from-pink-600 to-pink-500 text-white py-3.5 sm:py-4 rounded-xl font-black text-base sm:text-lg hover:from-pink-500 hover:to-pink-400 transition-all"
+              >
                 Proceed to Checkout
-              </button>
+              </Link>
             </div>
           </div>
         ) : (
           <div className="text-center py-20">
             <p className="text-2xl text-gray-500 mb-6">Your cart is empty</p>
-            <Link href="/" className="inline-block bg-pink-600 text-white px-8 py-3 rounded-full font-bold hover:bg-pink-700">
+            <Link href="/products" className="inline-block bg-pink-600 text-white px-8 py-3 rounded-full font-bold hover:bg-pink-700">
               Start Shopping
             </Link>
           </div>
