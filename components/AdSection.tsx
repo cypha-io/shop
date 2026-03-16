@@ -60,7 +60,7 @@ export default function AdSection() {
               
               {slide.type === 'video' && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors cursor-pointer">
+                  <div className="w-20 h-20 bg-pink-600 rounded-full flex items-center justify-center hover:bg-pink-700 transition-colors cursor-pointer">
                     <FiPlay className="text-4xl text-white ml-1" />
                   </div>
                 </div>

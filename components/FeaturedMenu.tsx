@@ -13,7 +13,7 @@ const featuredItems = [
     rating: 4.8,
     image: '🍕',
     badge: 'Best Seller',
-    badgeColor: 'bg-red-600'
+    badgeColor: 'bg-pink-600'
   },
   {
     id: 2,
@@ -23,7 +23,7 @@ const featuredItems = [
     rating: 4.9,
     image: '🍗',
     badge: 'Popular',
-    badgeColor: 'bg-yellow-500'
+    badgeColor: 'bg-pink-500'
   },
   {
     id: 3,
@@ -33,7 +33,7 @@ const featuredItems = [
     rating: 4.7,
     image: '🍚',
     badge: 'Chef Special',
-    badgeColor: 'bg-red-500'
+    badgeColor: 'bg-pink-500'
   },
 ];
 
@@ -45,7 +45,7 @@ export default function FeaturedMenu() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-black mb-4 text-gray-900">
-            <span className="text-red-600">Featured</span> Items
+            <span className="text-pink-600">Featured</span> Items
           </h2>
           <p className="text-xl text-gray-600">Our most loved dishes, hand-picked for you</p>
         </div>
@@ -54,7 +54,7 @@ export default function FeaturedMenu() {
           {featuredItems.map((item) => (
             <div 
               key={item.id}
-              className="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all overflow-hidden border-4 border-transparent hover:border-red-500 group"
+              className="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all overflow-hidden border-4 border-transparent hover:border-pink-500 group"
               onClick={() => setSelectedProduct({
                 id: item.id,
                 name: item.name,
@@ -71,7 +71,7 @@ export default function FeaturedMenu() {
                 </div>
                 
                 {/* Image placeholder */}
-                <div className="bg-gradient-to-br from-yellow-100 to-red-100 h-48 flex items-center justify-center text-8xl">
+                <div className="bg-gradient-to-br from-pink-100 to-pink-100 h-48 flex items-center justify-center text-8xl">
                   {item.image}
                 </div>
               </div>
@@ -80,7 +80,7 @@ export default function FeaturedMenu() {
               <div className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-2xl font-black text-gray-900">{item.name}</h3>
-                  <div className="flex items-center gap-1 bg-yellow-400 px-3 py-1 rounded-full">
+                  <div className="flex items-center gap-1 bg-pink-200 px-3 py-1 rounded-full">
                     <FiStar className="text-white fill-white" />
                     <span className="font-bold text-white">{item.rating}</span>
                   </div>
@@ -89,9 +89,9 @@ export default function FeaturedMenu() {
                 <p className="text-gray-600 font-medium">{item.description}</p>
                 
                 <div className="flex items-center justify-between pt-4">
-                  <span className="text-3xl font-black text-red-600">{item.price}</span>
+                  <span className="text-3xl font-black text-pink-600">{item.price}</span>
                   <button 
-                    className="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition-all flex items-center gap-2 shadow-lg group-hover:scale-105"
+                    className="bg-pink-600 text-white px-6 py-3 rounded-full font-bold hover:bg-pink-700 transition-all flex items-center gap-2 shadow-lg group-hover:scale-105"
                     onClick={(event) => {
                       event.stopPropagation();
                       setSelectedProduct({

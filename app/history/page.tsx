@@ -10,9 +10,9 @@ export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const orders = [
-    { id: '#12345', date: '2026-02-10', items: 'Pepperoni Pizza, Fried Chicken', total: 'GH₵125', status: 'Delivered' },
-    { id: '#12344', date: '2026-02-08', items: 'BBQ Wings, French Fries', total: 'GH₵75', status: 'Delivered' },
-    { id: '#12343', date: '2026-02-05', items: 'Family Package', total: 'GH₵160', status: 'Cancelled' },
+    { id: '#12345', date: '2026-02-10', items: 'Straight Wig, Body Wave Bundle', total: 'GH₵180', status: 'Delivered' },
+    { id: '#12344', date: '2026-02-08', items: 'Lace Frontal Wig, Hair Extensions', total: 'GH₵275', status: 'Delivered' },
+    { id: '#12343', date: '2026-02-05', items: 'Premium Silk Wig Package', total: 'GH₵350', status: 'Cancelled' },
   ];
 
   const filteredOrders = orders.filter((order) => {
@@ -41,7 +41,7 @@ export default function HistoryPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by order or items"
-                className="pl-9 pr-4 py-2.5 rounded-full border border-gray-200 text-sm font-semibold text-gray-700 focus:outline-none focus:border-red-600"
+                className="pl-9 pr-4 py-2.5 rounded-full border border-gray-200 text-sm font-semibold text-gray-700 focus:outline-none focus:border-pink-600"
               />
             </div>
             <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-3 py-2">
@@ -88,7 +88,7 @@ export default function HistoryPage() {
                 <p className="text-sm text-gray-500 font-semibold">Cancelled</p>
                 <p className="text-2xl font-black text-gray-900">{orders.filter(order => order.status === 'Cancelled').length}</p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-pink-50 text-pink-600 flex items-center justify-center">
                 <FiXCircle size={20} />
               </div>
             </div>
@@ -104,7 +104,7 @@ export default function HistoryPage() {
                     <span className="text-sm font-bold text-gray-500">Order</span>
                     <span className="text-lg font-black text-gray-900">{order.id}</span>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      order.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      order.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-pink-100 text-pink-700'
                     }`}>
                       {order.status}
                     </span>
@@ -113,7 +113,7 @@ export default function HistoryPage() {
                   <p className="text-gray-800 font-medium">{order.items}</p>
                 </div>
                 <div className="flex flex-col items-start lg:items-end gap-3">
-                  <p className="font-black text-2xl text-red-600">{order.total}</p>
+                  <p className="font-black text-2xl text-pink-600">{order.total}</p>
                   <div className="flex items-center gap-2">
                     <button className="px-4 py-2 rounded-full bg-gray-900 text-white text-sm font-bold hover:bg-gray-800">
                       Reorder

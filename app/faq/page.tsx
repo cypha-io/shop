@@ -56,10 +56,10 @@ export default function FAQPage() {
           ))}
         </div>
 
-        <div className="mt-12 text-center bg-red-50 rounded-lg p-8 shadow-sm border border-red-100">
+        <div className="mt-12 text-center bg-pink-50 rounded-lg p-8 shadow-sm border border-pink-100">
           <h2 className="text-2xl font-black text-gray-800 mb-3">Still have questions?</h2>
           <p className="text-gray-600 mb-6">Contact our support team for more help</p>
-          <a href="/contact" className="inline-block bg-red-600 text-white px-8 py-3 rounded-full font-bold hover:bg-red-700">
+          <a href="/contact" className="inline-block bg-pink-600 text-white px-8 py-3 rounded-full font-bold hover:bg-pink-700">
             Contact Us
           </a>
         </div>

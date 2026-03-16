@@ -109,7 +109,7 @@ export default function CategoryPage() {
                 {/* Name and Price */}
                 <div className="text-center">
                   <h3 className="font-bold text-gray-800 text-sm mb-2">{product.name}</h3>
-                  <div className="bg-red-600 rounded-lg px-3 py-1.5 inline-block">
+                  <div className="bg-pink-600 rounded-lg px-3 py-1.5 inline-block">
                     <p className="text-white font-black text-sm">{product.price}</p>
                   </div>
                 </div>

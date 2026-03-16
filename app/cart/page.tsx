@@ -9,9 +9,9 @@ import Footer from '@/components/Footer';
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState([
-    { id: 1, name: 'Pepperoni Pizza', price: 45, quantity: 2, image: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=80' },
-    { id: 2, name: 'Fried Chicken', price: 35, quantity: 1, image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&q=80' },
-    { id: 3, name: 'French Fries', price: 15, quantity: 3, image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&q=80' },
+    { id: 1, name: 'Straight Hair Wig', price: 85, quantity: 2, image: 'https://images.unsplash.com/photo-1595980519145-bc96e929d76c?w=400&q=80' },
+    { id: 2, name: 'Body Wave 24"', price: 95, quantity: 1, image: 'https://images.unsplash.com/photo-1562322633-91bd282ca975?w=400&q=80' },
+    { id: 3, name: 'Kinky Curly Bundle', price: 120, quantity: 1, image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&q=80' },
   ]);
 
   const updateQuantity = (id: number, delta: number) => {
@@ -49,7 +49,7 @@ export default function CartPage() {
                   
                   <div className="flex-1">
                     <h3 className="font-black text-lg text-gray-800">{item.name}</h3>
-                    <p className="text-red-600 font-bold">GH₵{item.price}</p>
+                    <p className="text-pink-600 font-bold">GH₵{item.price}</p>
                   </div>
 
                   <div className="flex items-center justify-between sm:justify-start gap-3">
@@ -62,13 +62,13 @@ export default function CartPage() {
                         <FiPlus className="text-gray-600" />
                       </button>
                     </div>
-                    <button onClick={() => removeItem(item.id)} className="w-10 h-10 bg-red-50 hover:bg-red-100 rounded-full flex items-center justify-center sm:hidden">
-                      <FiTrash2 className="text-red-600" />
+                    <button onClick={() => removeItem(item.id)} className="w-10 h-10 bg-pink-50 hover:bg-pink-100 rounded-full flex items-center justify-center sm:hidden">
+                      <FiTrash2 className="text-pink-600" />
                     </button>
                   </div>
 
-                  <button onClick={() => removeItem(item.id)} className="hidden sm:flex w-10 h-10 bg-red-50 hover:bg-red-100 rounded-full items-center justify-center">
-                    <FiTrash2 className="text-red-600" />
+                  <button onClick={() => removeItem(item.id)} className="hidden sm:flex w-10 h-10 bg-pink-50 hover:bg-pink-100 rounded-full items-center justify-center">
+                    <FiTrash2 className="text-pink-600" />
                   </button>
                 </div>
               ))}
@@ -89,11 +89,11 @@ export default function CartPage() {
                 </div>
                 <div className="border-t pt-3 flex justify-between">
                   <span className="font-black text-lg">Total</span>
-                  <span className="font-black text-xl text-red-600">GH₵{total}</span>
+                  <span className="font-black text-xl text-pink-600">GH₵{total}</span>
                 </div>
               </div>
 
-              <button className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white py-3.5 sm:py-4 rounded-xl font-black text-base sm:text-lg hover:from-red-500 hover:to-red-400 transition-all">
+              <button className="w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-3.5 sm:py-4 rounded-xl font-black text-base sm:text-lg hover:from-pink-500 hover:to-pink-400 transition-all">
                 Proceed to Checkout
               </button>
             </div>
@@ -101,7 +101,7 @@ export default function CartPage() {
         ) : (
           <div className="text-center py-20">
             <p className="text-2xl text-gray-500 mb-6">Your cart is empty</p>
-            <Link href="/" className="inline-block bg-red-600 text-white px-8 py-3 rounded-full font-bold hover:bg-red-700">
+            <Link href="/" className="inline-block bg-pink-600 text-white px-8 py-3 rounded-full font-bold hover:bg-pink-700">
               Start Shopping
             </Link>
           </div>

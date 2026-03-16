@@ -5,50 +5,50 @@ import Image from 'next/image';
 import { FiShoppingCart } from 'react-icons/fi';
 import ProductViewModal, { ProductViewItem } from '@/components/ProductViewModal';
 
-export default function PopularItems() {
+export default function NewArrivals() {
   const [selectedProduct, setSelectedProduct] = useState<ProductViewItem | null>(null);
   const products = [
     {
       id: 1,
-      name: 'Pepperoni Pizza',
-      price: 'GH₵45',
-      image: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=80'
+      name: 'Kinky Curly Bundle',
+      price: 'GH₵120',
+      image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&q=80'
     },
     {
       id: 2,
-      name: 'Fried Chicken',
-      price: 'GH₵35',
-      image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&q=80'
+      name: 'Body Wave 24"',
+      price: 'GH₵95',
+      image: 'https://images.unsplash.com/photo-1562322633-91bd282ca975?w=400&q=80'
     },
     {
       id: 3,
-      name: 'BBQ Wings',
-      price: 'GH₵40',
-      image: 'https://images.unsplash.com/photo-1608039755401-742074f0548d?w=400&q=80'
+      name: 'Straight Hair Extensions',
+      price: 'GH₵85',
+      image: 'https://images.unsplash.com/photo-1595980519145-bc96e929d76c?w=400&q=80'
     },
     {
       id: 4,
-      name: 'Margherita Pizza',
-      price: 'GH₵42',
-      image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&q=80'
+      name: 'Lace Frontal Wig',
+      price: 'GH₵150',
+      image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80'
     },
     {
       id: 5,
-      name: 'Chicken Burger',
-      price: 'GH₵30',
-      image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80'
+      name: 'Curly Lace Wig',
+      price: 'GH₵135',
+      image: 'https://images.unsplash.com/photo-1595979774223-4d71bcdd2eaf?w=400&q=80'
     },
     {
       id: 6,
-      name: 'Cheese Pizza',
-      price: 'GH₵38',
-      image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80'
+      name: 'Human Hair Blend',
+      price: 'GH₵110',
+      image: 'https://images.unsplash.com/photo-1597423244036-adc5ffd0a4b2?w=400&q=80'
     },
   ];
 
   return (
     <section className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-12">
-      <h2 className="text-lg md:text-xl font-black text-gray-800 mb-4 md:mb-8 text-center">Popular</h2>
+      <h2 className="text-lg md:text-xl font-black text-gray-800 mb-4 md:mb-8 text-center">New Arrivals</h2>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {products.map((product) => (

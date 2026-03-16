@@ -53,17 +53,17 @@ export default function LocationsPage() {
               
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <FiMapPin className="text-xl text-red-600 mt-1 flex-shrink-0" />
+                  <FiMapPin className="text-xl text-pink-600 mt-1 flex-shrink-0" />
                   <p className="text-gray-700">{location.address}</p>
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <FiPhone className="text-xl text-red-600 mt-1 flex-shrink-0" />
+                  <FiPhone className="text-xl text-pink-600 mt-1 flex-shrink-0" />
                   <p className="text-gray-700">{location.phone}</p>
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <FiClock className="text-xl text-red-600 mt-1 flex-shrink-0" />
+                  <FiClock className="text-xl text-pink-600 mt-1 flex-shrink-0" />
                   <p className="text-gray-700">{location.hours}</p>
                 </div>
               </div>

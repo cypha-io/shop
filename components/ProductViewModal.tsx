@@ -197,7 +197,7 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <p className="text-xs text-gray-500 font-semibold">Price</p>
-                <div className="text-lg font-black text-red-600">{product?.price}</div>
+                <div className="text-lg font-black text-pink-600">{product?.price}</div>
               </div>
               <div className="flex items-center gap-3">
                 <button
@@ -217,7 +217,7 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
                 </button>
               </div>
               <button
-                className="w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center transition-colors"
+                className="w-12 h-12 bg-pink-600 hover:bg-pink-700 text-white rounded-full flex items-center justify-center transition-colors"
                 aria-label="Add to cart"
               >
                 <FiShoppingCart className="text-lg" />
@@ -244,17 +244,17 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
                     }
                   }}
                   placeholder="Enter code (e.g. PIZZA10)"
-                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 focus:outline-none focus:border-red-600"
+                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 focus:outline-none focus:border-pink-600"
                 />
                 <button
                   onClick={handleApplyPromo}
-                  className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors"
+                  className="px-4 py-2 rounded-lg bg-pink-600 text-white text-sm font-semibold hover:bg-pink-700 transition-colors"
                 >
                   Apply
                 </button>
               </div>
               {promoError && (
-                <p className="mt-2 text-xs font-semibold text-red-600">{promoError}</p>
+                <p className="mt-2 text-xs font-semibold text-pink-600">{promoError}</p>
               )}
               <div className="mt-3 flex items-center justify-between text-sm">
                 <span className="text-gray-600">Discount</span>
@@ -262,7 +262,7 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
               </div>
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-gray-600">Total</span>
-                <span className="font-black text-red-600">GH₵{total.toFixed(2)}</span>
+                <span className="font-black text-pink-600">GH₵{total.toFixed(2)}</span>
               </div>
             </div>
           </div>

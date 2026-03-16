@@ -54,8 +54,8 @@ export default function Categories({ activeCategory }: CategoriesProps) {
               >
                 <div className={`rounded-lg md:rounded-xl p-2 md:p-3 hover:scale-105 transition-transform shadow-md hover:shadow-lg flex items-center gap-1.5 md:gap-2 min-w-[110px] md:min-w-[140px] ${
                   isActive 
-                    ? 'bg-yellow-400 text-gray-900' 
-                    : 'bg-red-600 text-white'
+                    ? 'bg-pink-200 text-gray-900' 
+                    : 'bg-pink-600 text-white'
                 }`}>
                   <div className="text-xl md:text-2xl flex-shrink-0">
                     {category.image}

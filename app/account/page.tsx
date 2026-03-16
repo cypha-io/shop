@@ -32,7 +32,7 @@ export default function AccountPage() {
 
         {!isLoggedIn ? (
           <div className="grid lg:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-red-600 to-red-700 text-white rounded-3xl p-8 shadow-xl">
+            <div className="bg-gradient-to-br from-pink-600 to-pink-700 text-white rounded-3xl p-8 shadow-xl">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center">
                   <FiPhone className="text-2xl" />
@@ -82,16 +82,16 @@ export default function AccountPage() {
                     }
                   }}
                   placeholder="+233 XX XXX XXXX"
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-red-600 focus:outline-none text-base"
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-pink-600 focus:outline-none text-base"
                 />
               </div>
               {loginError && (
-                <p className="mt-2 text-sm font-semibold text-red-600">{loginError}</p>
+                <p className="mt-2 text-sm font-semibold text-pink-600">{loginError}</p>
               )}
 
               <button
                 onClick={handleLogin}
-                className="w-full mt-6 bg-red-600 text-white py-3 rounded-2xl font-bold hover:bg-red-700 transition-colors"
+                className="w-full mt-6 bg-pink-600 text-white py-3 rounded-2xl font-bold hover:bg-pink-700 transition-colors"
               >
                 Continue
               </button>
@@ -106,7 +106,7 @@ export default function AccountPage() {
             <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-200">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8">
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 bg-red-600 rounded-2xl flex items-center justify-center">
+                  <div className="w-20 h-20 bg-pink-600 rounded-2xl flex items-center justify-center">
                     <FiUser className="text-4xl text-white" />
                   </div>
                   <div>
@@ -121,7 +121,7 @@ export default function AccountPage() {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-2xl">
-                  <FiMail className="text-xl text-red-600 mt-1" />
+                  <FiMail className="text-xl text-pink-600 mt-1" />
                   <div>
                     <p className="font-bold text-gray-800">Email</p>
                     <p className="text-gray-600">john.doe@example.com</p>
@@ -129,7 +129,7 @@ export default function AccountPage() {
                 </div>
 
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-2xl">
-                  <FiPhone className="text-xl text-red-600 mt-1" />
+                  <FiPhone className="text-xl text-pink-600 mt-1" />
                   <div>
                     <p className="font-bold text-gray-800">Phone</p>
                     <p className="text-gray-600">{phone || '+233 XX XXX XXXX'}</p>
@@ -137,7 +137,7 @@ export default function AccountPage() {
                 </div>
 
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-2xl sm:col-span-2">
-                  <FiMapPin className="text-xl text-red-600 mt-1" />
+                  <FiMapPin className="text-xl text-pink-600 mt-1" />
                   <div>
                     <p className="font-bold text-gray-800">Default Address</p>
                     <p className="text-gray-600">Accra, North Legon</p>
@@ -149,7 +149,7 @@ export default function AccountPage() {
             <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-200">
               <h3 className="text-xl font-black text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <button className="w-full px-4 py-3 rounded-2xl bg-red-50 text-red-700 font-bold hover:bg-red-100">
+                <button className="w-full px-4 py-3 rounded-2xl bg-pink-50 text-pink-700 font-bold hover:bg-pink-100">
                   Manage Addresses
                 </button>
                 <button className="w-full px-4 py-3 rounded-2xl bg-gray-50 text-gray-800 font-bold hover:bg-gray-100">
