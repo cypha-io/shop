@@ -1,0 +1,112 @@
+'use client';
+
+import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
+import { appReady } from '@/lib/appReady';
+import { prefetchProducts } from '@/hooks/useProducts';
+
+// All endpoints the app uses on the home page and featured sections.
+// Fetching these up-front means every component gets instant cached data on mount.
+const PREFETCH_ENDPOINTS = [
+  '/api/products',                          // all products (home, category pages)
+  '/api/products?featured=true&limit=3',   // FeaturedMenu section
+];
+
+export default function SplashScreen() {
+  const [visible, setVisible] = useState(true);
+  const [fading, setFading] = useState(false);
+  const windowLoaded = useRef(false);
+  const minTimeElapsed = useRef(false);
+  const dismissed = useRef(false);
+
+  const tryDismiss = () => {
+    if (dismissed.current) return;
+    if (!windowLoaded.current) return;
+    if (!minTimeElapsed.current) return;
+    if (appReady.isPending()) return;
+
+    dismissed.current = true;
+    setFading(true);
+    setTimeout(() => setVisible(false), 600);
+  };
+
+  useEffect(() => {
+    // Kick off all data prefetches immediately
+    PREFETCH_ENDPOINTS.forEach(ep => prefetchProducts(ep));
+
+    // Minimum display time — ensures the splash is never a bare flash
+    const minTimer = setTimeout(() => {
+      minTimeElapsed.current = true;
+      tryDismiss();
+    }, 1500);
+
+    // Hard fallback: always dismiss after 8s
+    const fallback = setTimeout(() => {
+      windowLoaded.current = true;
+      minTimeElapsed.current = true;
+      if (!dismissed.current) {
+        dismissed.current = true;
+        setFading(true);
+        setTimeout(() => setVisible(false), 600);
+      }
+    }, 8000);
+
+    // Wait for all static resources
+    const onWindowLoad = () => {
+      windowLoaded.current = true;
+      tryDismiss();
+    };
+    if (document.readyState === 'complete') {
+      windowLoaded.current = true;
+    } else {
+      window.addEventListener('load', onWindowLoad, { once: true });
+    }
+
+    // Re-check whenever a product fetch finishes
+    const unsubscribe = appReady.subscribe(() => {
+      tryDismiss();
+    });
+
+    return () => {
+      clearTimeout(minTimer);
+      clearTimeout(fallback);
+      window.removeEventListener('load', onWindowLoad);
+      unsubscribe();
+    };
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white transition-opacity duration-600 ${
+        fading ? 'opacity-0' : 'opacity-100'
+      }`}
+      style={{ transition: 'opacity 0.6s ease' }}
+    >
+      {/* Logo */}
+      <div className="relative w-32 h-32 mb-6 animate-pulse">
+        <Image
+          src="/logo.png"
+          alt="Wig Factory"
+          fill
+          className="object-contain"
+          priority
+        />
+      </div>
+
+      {/* Brand name */}
+      <h1 className="text-3xl font-black text-gray-800 tracking-tight mb-2">
+        Wig Factory
+      </h1>
+      <p className="text-sm text-gray-400 tracking-widest uppercase">
+        Premium Wigs &amp; Hair
+      </p>
+
+      {/* Loading bar */}
+      <div className="mt-10 w-48 h-1 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-full bg-pink-500 rounded-full animate-loading-bar" />
+      </div>
+    </div>
+  );
+}

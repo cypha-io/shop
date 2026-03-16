@@ -4,6 +4,17 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+@keyframes loading-bar {
+  0%   { width: 0%; }
+  30%  { width: 40%; }
+  70%  { width: 75%; }
+  100% { width: 100%; }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 2.5s ease-in-out forwards;
+}
+
 /* Hide scrollbar but keep functionality */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;

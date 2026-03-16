@@ -16,6 +16,8 @@ model Product {
   price     String
   image     String
   category  String
+  description String?
+  isFeatured  Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

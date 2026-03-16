@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { IoHomeSharp } from 'react-icons/io5';
-import { FiSearch, FiShoppingCart, FiClock, FiUser } from 'react-icons/fi';
+import { FiGrid, FiShoppingCart, FiClock, FiUser } from 'react-icons/fi';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -39,13 +39,13 @@ export default function Navbar() {
                 <span className="font-bold text-lg">Home</span>
               </Link>
               <Link
-                href="/search"
+                href="/products"
                 className={`flex items-center gap-3 transition-colors px-6 py-3 rounded-full ${
-                  pathname === '/search' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
+                  pathname === '/products' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
                 }`}
               >
-                <FiSearch className="text-2xl" />
-                <span className="font-bold text-lg">Search</span>
+                <FiGrid className="text-2xl" />
+                <span className="font-bold text-lg">Products</span>
               </Link>
               <Link
                 href="/cart"
@@ -106,13 +106,13 @@ export default function Navbar() {
             {pathname === '/' && <span className="font-bold text-sm">Home</span>}
           </Link>
           <Link
-            href="/search"
+            href="/products"
             className={`flex items-center gap-2 transition-colors px-3 py-2 rounded-full ${
-              pathname === '/search' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
+              pathname === '/products' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
             }`}
           >
-            <FiSearch className="text-lg" />
-            {pathname === '/search' && <span className="font-bold text-sm">Search</span>}
+            <FiGrid className="text-lg" />
+            {pathname === '/products' && <span className="font-bold text-sm">Products</span>}
           </Link>
           <Link
             href="/cart"
