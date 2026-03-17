@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { FiCamera, FiCheck, FiChevronDown, FiPlus, FiTrash2 } from 'react-icons/fi';
 
 type ProductForm = {
   name: string;
@@ -16,9 +17,10 @@ type ProductForm = {
 };
 
 type VariationForm = {
-  name: string;
-  option: string;
-  additionalPrice: string;
+  name: '' | 'Size' | 'Color' | 'Type';
+  options: string[];
+  regularPrice: string;
+  salePrice: string;
 };
 
 type Toast = {
@@ -42,6 +44,18 @@ const INITIAL_FORM: ProductForm = {
   hasVariations: false,
 };
 
+const VARIATION_OPTIONS: Record<'Size' | 'Color' | 'Type', string[]> = {
+  Size: ['8 Inch', '10 Inch', '12 Inch', '14 Inch', '16 Inch', '18 Inch', '20 Inch', '22 Inch', '24 Inch'],
+  Color: ['Black', 'Brown', 'Blonde', 'Burgundy', 'Ombre', 'Natural'],
+  Type: ['Straight', 'Body Wave', 'Deep Wave', 'Curly', 'Kinky', 'Frontal', 'Closure'],
+};
+
+const inputCls =
+  'mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition placeholder:text-gray-400';
+
+const selectCls =
+  'mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition appearance-none cursor-pointer';
+
 export default function AddProductPage() {
   const router = useRouter();
   const [form, setForm] = useState<ProductForm>(INITIAL_FORM);
@@ -51,8 +65,11 @@ export default function AddProductPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
-  const [variations, setVariations] = useState<VariationForm[]>([{ name: '', option: '', additionalPrice: '' }]);
+  const [variations, setVariations] = useState<VariationForm[]>([{ name: '', options: [], regularPrice: '', salePrice: '' }]);
   const [toast, setToast] = useState<Toast | null>(null);
+
+  const hasVariationPriceSet =
+    form.hasVariations && variations.some(variation => variation.regularPrice.trim().length > 0 || variation.salePrice.trim().length > 0);
 
   useEffect(() => {
     if (!toast) return;
@@ -76,18 +93,23 @@ export default function AddProductPage() {
   }, []);
 
   const canSubmit = useMemo(() => {
-    const variationValid = !form.hasVariations || variations.some(variation => variation.name.trim() && variation.option.trim());
+    const variationValid =
+      !form.hasVariations ||
+      variations.some(
+        variation => variation.name && variation.options.length > 0 && variation.regularPrice.trim().length > 0
+      );
+    const hasBasePrice = form.regularPrice.trim().length > 0;
 
     return (
       form.name.trim().length > 0 &&
       form.description.trim().length > 0 &&
       form.imageUrls.length > 0 &&
-      form.regularPrice.trim().length > 0 &&
+      (hasBasePrice || hasVariationPriceSet) &&
       form.category.trim().length > 0 &&
       !uploading &&
       variationValid
     );
-  }, [form, uploading, variations]);
+  }, [form, uploading, variations, hasVariationPriceSet]);
 
   const uploadImage = async (file: File) => {
     try {
@@ -131,17 +153,18 @@ export default function AddProductPage() {
           description: form.description.trim(),
           image: form.imageUrls[0],
           imageUrls: form.imageUrls,
-          regularPrice: form.regularPrice.trim(),
-          salePrice: form.salePrice.trim(),
+          regularPrice: hasVariationPriceSet ? '' : form.regularPrice.trim(),
+          salePrice: hasVariationPriceSet ? '' : form.salePrice.trim(),
           category: (selectedCategory === '__custom__' ? customCategory : form.category).trim(),
           hasVariations: form.hasVariations,
           variations: form.hasVariations
             ? variations
-                .filter(variation => variation.name.trim() && variation.option.trim())
+                .filter(variation => variation.name && variation.options.length > 0)
                 .map(variation => ({
-                  name: variation.name.trim(),
-                  option: variation.option.trim(),
-                  additionalPrice: variation.additionalPrice.trim() || '0',
+                  name: variation.name,
+                  options: variation.options,
+                  regularPrice: variation.regularPrice.trim(),
+                  salePrice: variation.salePrice.trim(),
                 }))
             : [],
           isFeatured: false,
@@ -166,126 +189,151 @@ export default function AddProductPage() {
   };
 
   return (
-    <section className="mx-auto w-full max-w-3xl">
+    <div className="mx-auto w-full max-w-2xl space-y-4 pb-12">
       {toast && (
         <div className="fixed right-4 top-4 z-50">
           <div
-            className={`rounded-lg px-4 py-3 text-sm font-semibold shadow-lg ${
-              toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-pink-600 text-white'
+            className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg ${
+              toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
             }`}
           >
+            {toast.type === 'success' ? <FiCheck className="h-4 w-4" /> : null}
             {toast.message}
           </div>
         </div>
       )}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-black text-slate-900">Add Product</h1>
-            <p className="mt-1 text-sm text-slate-600">Create a product using the required admin form.</p>
-          </div>
-          <Link href="/admin/products" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700">
-            Back to Products
-          </Link>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Add Product</h1>
+          <p className="mt-0.5 text-sm text-gray-500">Create a new product using the form below.</p>
         </div>
+        <Link
+          href="/admin/products"
+          className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+        >
+          ← Back
+        </Link>
+      </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <label className="text-sm font-semibold text-slate-700">
-            Name
+      {/* Basic Information */}
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-400">Basic Information</h2>
+        <div className="space-y-4">
+          <label className="block text-sm font-semibold text-gray-700">
+            Product Name
             <input
               value={form.name}
-              onChange={event => setForm(prev => ({ ...prev, name: event.target.value }))}
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g. Brazilian Body Wave Wig"
+              className={inputCls}
             />
           </label>
 
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="block text-sm font-semibold text-gray-700">
             Category
-            <select
-              value={selectedCategory}
-              onChange={event => {
-                const value = event.target.value;
-                setSelectedCategory(value);
-
-                if (value === '__custom__') {
-                  setForm(prev => ({ ...prev, category: customCategory }));
-                } else {
-                  const chosen = categories.find(category => String(category.id) === value);
-                  const name = chosen?.name || '';
-                  setForm(prev => ({ ...prev, category: name }));
-                }
-              }}
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            >
-              <option value="">Select category</option>
-              {categories.map(category => (
-                <option key={category.id} value={String(category.id)}>
-                  {category.name}
-                </option>
-              ))}
-              <option value="__custom__">Custom category</option>
-            </select>
+            <div className="relative">
+              <select
+                value={selectedCategory}
+                onChange={e => {
+                  const value = e.target.value;
+                  setSelectedCategory(value);
+                  if (value === '__custom__') {
+                    setForm(prev => ({ ...prev, category: customCategory }));
+                  } else {
+                    const chosen = categories.find(c => String(c.id) === value);
+                    setForm(prev => ({ ...prev, category: chosen?.name || '' }));
+                  }
+                }}
+                className={selectCls}
+              >
+                <option value="">Select a category</option>
+                {categories.map(c => (
+                  <option key={c.id} value={String(c.id)}>
+                    {c.name}
+                  </option>
+                ))}
+                <option value="__custom__">+ Custom category</option>
+              </select>
+              <FiChevronDown className="pointer-events-none absolute right-3 top-1/2 mt-1 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            </div>
           </label>
 
-          <label className="text-sm font-semibold text-slate-700">
-            Price (Regular)
-            <input
-              value={form.regularPrice}
-              onChange={event => setForm(prev => ({ ...prev, regularPrice: event.target.value }))}
-              placeholder="e.g. GH₵150"
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            />
-          </label>
+          {selectedCategory === '__custom__' && (
+            <label className="block text-sm font-semibold text-gray-700">
+              Custom Category Name
+              <input
+                value={customCategory}
+                onChange={e => {
+                  setCustomCategory(e.target.value);
+                  setForm(prev => ({ ...prev, category: e.target.value }));
+                }}
+                placeholder="Enter category name"
+                className={inputCls}
+              />
+            </label>
+          )}
 
-          <label className="text-sm font-semibold text-slate-700">
-            Price (Sale)
-            <input
-              value={form.salePrice}
-              onChange={event => setForm(prev => ({ ...prev, salePrice: event.target.value }))}
-              placeholder="Optional"
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          <label className="block text-sm font-semibold text-gray-700">
+            Description
+            <textarea
+              value={form.description}
+              onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
+              rows={4}
+              placeholder="Describe the product..."
+              className={`${inputCls} resize-none`}
             />
           </label>
         </div>
+      </div>
 
-        {selectedCategory === '__custom__' && (
-          <label className="mt-4 block text-sm font-semibold text-slate-700">
-            Custom Category
+      {/* Pricing */}
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <h2 className="mb-1 text-xs font-bold uppercase tracking-wider text-gray-400">Pricing</h2>
+        {hasVariationPriceSet && (
+          <p className="mb-4 mt-2 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+            Pricing is controlled by variations below. Base prices are disabled.
+          </p>
+        )}
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm font-semibold text-gray-700">
+            Regular Price
             <input
-              value={customCategory}
-              onChange={event => {
-                const value = event.target.value;
-                setCustomCategory(value);
-                setForm(prev => ({ ...prev, category: value }));
-              }}
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              value={form.regularPrice}
+              onChange={e => setForm(prev => ({ ...prev, regularPrice: e.target.value }))}
+              placeholder="e.g. GH₵150"
+              disabled={hasVariationPriceSet}
+              className={`${inputCls} disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400`}
             />
           </label>
-        )}
+          <label className="block text-sm font-semibold text-gray-700">
+            Sale Price
+            <input
+              value={form.salePrice}
+              onChange={e => setForm(prev => ({ ...prev, salePrice: e.target.value }))}
+              placeholder="Optional"
+              disabled={hasVariationPriceSet}
+              className={`${inputCls} disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400`}
+            />
+          </label>
+        </div>
+      </div>
 
-        <label className="mt-4 block text-sm font-semibold text-slate-700">
-          Description
-          <textarea
-            value={form.description}
-            onChange={event => setForm(prev => ({ ...prev, description: event.target.value }))}
-            rows={4}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
-        </label>
-
-        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm font-semibold text-slate-700">Image Upload (Up to 3)</p>
+      {/* Images */}
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">Product Images</h2>
+            <p className="mt-0.5 text-xs text-gray-400">Up to 3 images. First image is the main.</p>
+          </div>
           <input
             ref={imageInputRef}
             type="file"
             accept="image/*"
-            onChange={event => {
-              const file = event.target.files?.[0];
-              if (file) {
-                void uploadImage(file);
-              }
-              event.target.value = '';
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) void uploadImage(file);
+              e.target.value = '';
             }}
             className="hidden"
           />
@@ -293,109 +341,238 @@ export default function AddProductPage() {
             type="button"
             onClick={() => imageInputRef.current?.click()}
             disabled={uploading || form.imageUrls.length >= 3}
-            className="mt-3 rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl bg-pink-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-700 disabled:opacity-50"
           >
-            {uploading ? 'Uploading...' : form.imageUrls.length >= 3 ? 'Maximum Reached' : 'Upload Image'}
+            <FiCamera className="h-4 w-4" />
+            {uploading ? 'Uploading...' : form.imageUrls.length >= 3 ? 'Max reached' : 'Add Image'}
           </button>
-          {uploading && <p className="mt-2 text-sm font-semibold text-slate-700">Uploading image...</p>}
-          {form.imageUrls.length > 0 && (
-            <div className="mt-3 grid grid-cols-3 gap-3">
-              {form.imageUrls.map((url, index) => (
-                <div key={url} className="relative">
-                  <Image src={url} alt={`Uploaded product ${index + 1}`} width={128} height={128} className="rounded-lg object-cover" />
+        </div>
+        {form.imageUrls.length > 0 ? (
+          <div className="grid grid-cols-3 gap-3">
+            {form.imageUrls.map((url, i) => (
+              <div key={url} className="group relative aspect-square overflow-hidden rounded-xl border border-gray-100">
+                <Image src={url} alt={`Uploaded product ${i + 1}`} fill className="object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/30">
                   <button
                     type="button"
                     onClick={() =>
                       setForm(prev => ({
                         ...prev,
-                        imageUrls: prev.imageUrls.filter((_, imageIndex) => imageIndex !== index),
+                        imageUrls: prev.imageUrls.filter((_, idx) => idx !== i),
                       }))
                     }
-                    className="absolute right-1 top-1 rounded bg-white/90 px-2 py-1 text-xs font-semibold text-pink-700"
+                    className="scale-75 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-rose-600 opacity-0 shadow transition group-hover:scale-100 group-hover:opacity-100"
                   >
+                    <FiTrash2 className="mr-0.5 inline h-3 w-3" />
                     Remove
                   </button>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <label className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-          <input
-            type="checkbox"
-            checked={form.hasVariations}
-            onChange={event => setForm(prev => ({ ...prev, hasVariations: event.target.checked }))}
-          />
-          Variation
-        </label>
-
-        {form.hasVariations && (
-          <div className="mt-4 rounded-xl border border-pink-100 bg-pink-50 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-bold text-pink-700">Variation Form</p>
-              <button
-                type="button"
-                onClick={() => setVariations(prev => [...prev, { name: '', option: '', additionalPrice: '' }])}
-                className="rounded-lg bg-pink-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-pink-700"
-              >
-                Add Variation Row
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {variations.map((variation, index) => (
-                <div key={`${variation.name}-${variation.option}-${index}`} className="grid gap-3 rounded-lg border border-pink-100 bg-white p-3 md:grid-cols-3">
-                  <input
-                    value={variation.name}
-                    onChange={event =>
-                      setVariations(prev => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, name: event.target.value } : row)))
-                    }
-                    placeholder="Variation name (e.g. Size)"
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                  />
-                  <input
-                    value={variation.option}
-                    onChange={event =>
-                      setVariations(prev => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, option: event.target.value } : row)))
-                    }
-                    placeholder="Option (e.g. 14 Inch)"
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                  />
-                  <div className="flex gap-2">
-                    <input
-                      value={variation.additionalPrice}
-                      onChange={event =>
-                        setVariations(prev => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, additionalPrice: event.target.value } : row)))
-                      }
-                      placeholder="Additional price"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setVariations(prev => (prev.length === 1 ? prev : prev.filter((_, rowIndex) => rowIndex !== index)))}
-                      className="rounded-lg bg-pink-100 px-3 py-2 text-xs font-semibold text-pink-700"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
+                {i === 0 && (
+                  <span className="absolute bottom-1.5 left-1.5 rounded bg-pink-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                    Main
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div
+            onClick={() => imageInputRef.current?.click()}
+            className="flex h-32 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-gray-200 text-gray-400 transition hover:border-pink-400 hover:text-pink-500"
+          >
+            <div className="text-center">
+              <FiCamera className="mx-auto h-8 w-8" />
+              <p className="mt-1 text-sm font-medium">Click to upload an image</p>
             </div>
           </div>
         )}
-
-        <div className="mt-6">
-          <button
-            type="button"
-            onClick={() => void createProduct()}
-            disabled={saving || !canSubmit}
-            className="rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700 disabled:opacity-50"
-          >
-            {saving ? 'Adding...' : 'Add Product'}
-          </button>
-        </div>
       </div>
-    </section>
+
+      {/* Variations */}
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">Variations</h2>
+            <p className="mt-0.5 text-xs text-gray-400">Add sizes, colors, or types with individual pricing.</p>
+          </div>
+          <label className="flex cursor-pointer items-center gap-2.5">
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={form.hasVariations}
+                onChange={e => setForm(prev => ({ ...prev, hasVariations: e.target.checked }))}
+                className="sr-only"
+              />
+              <div className={`h-6 w-11 rounded-full transition ${form.hasVariations ? 'bg-pink-600' : 'bg-gray-200'}`} />
+              <div
+                className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                  form.hasVariations ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </div>
+            <span className="text-sm font-semibold text-gray-700">
+              {form.hasVariations ? 'Enabled' : 'Disabled'}
+            </span>
+          </label>
+        </div>
+
+        {form.hasVariations && (
+          <div className="mt-4 space-y-3">
+            {hasVariationPriceSet && (
+              <p className="rounded-lg border border-pink-100 bg-pink-50 px-3 py-2 text-xs font-medium text-pink-700">
+                Variation prices active — base product prices are disabled.
+              </p>
+            )}
+            {variations.map((variation, i) => (
+              <div key={`${variation.name}-${i}`} className="space-y-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Variation {i + 1}</p>
+                  {variations.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setVariations(prev => prev.filter((_, idx) => idx !== i))}
+                      className="rounded-lg bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-600 transition hover:bg-rose-100"
+                    >
+                      <FiTrash2 className="mr-0.5 inline h-3 w-3" />
+                      Remove
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-600">Variation Type</label>
+                    <div className="relative">
+                      <select
+                        value={variation.name}
+                        onChange={e =>
+                          setVariations(prev =>
+                            prev.map((row, idx) =>
+                              idx === i ? { ...row, name: e.target.value as VariationForm['name'], options: [] } : row
+                            )
+                          )
+                        }
+                        className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500 cursor-pointer"
+                      >
+                        <option value="">Select type</option>
+                        <option value="Size">Size</option>
+                        <option value="Color">Color</option>
+                        <option value="Type">Type</option>
+                      </select>
+                      <FiChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-600">
+                      Options{' '}
+                      {variation.name && <span className="font-normal text-gray-400">(hold Ctrl/⌘ for multiple)</span>}
+                    </label>
+                    <select
+                      multiple
+                      value={variation.options}
+                      onChange={e =>
+                        setVariations(prev =>
+                          prev.map((row, idx) =>
+                            idx === i
+                              ? { ...row, options: Array.from(e.target.selectedOptions).map(o => o.value) }
+                              : row
+                          )
+                        )
+                      }
+                      disabled={!variation.name}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:bg-gray-50 disabled:text-gray-400"
+                      size={4}
+                    >
+                      {variation.name
+                        ? VARIATION_OPTIONS[variation.name].map(opt => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))
+                        : null}
+                    </select>
+                    {variation.options.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {variation.options.map(opt => (
+                          <span
+                            key={opt}
+                            className="inline-flex items-center rounded-full border border-pink-100 bg-pink-50 px-2.5 py-0.5 text-xs font-semibold text-pink-700"
+                          >
+                            {opt}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block text-xs font-semibold text-gray-600">
+                    Regular Price
+                    <input
+                      value={variation.regularPrice}
+                      onChange={e =>
+                        setVariations(prev =>
+                          prev.map((row, idx) => (idx === i ? { ...row, regularPrice: e.target.value } : row))
+                        )
+                      }
+                      placeholder="e.g. GH₵200"
+                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    />
+                  </label>
+                  <label className="block text-xs font-semibold text-gray-600">
+                    Sale Price
+                    <input
+                      value={variation.salePrice}
+                      onChange={e =>
+                        setVariations(prev =>
+                          prev.map((row, idx) => (idx === i ? { ...row, salePrice: e.target.value } : row))
+                        )
+                      }
+                      placeholder="Optional"
+                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={() =>
+                setVariations(prev => [...prev, { name: '', options: [], regularPrice: '', salePrice: '' }])
+              }
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-pink-200 py-3 text-sm font-semibold text-pink-600 transition hover:border-pink-400 hover:bg-pink-50"
+            >
+              <FiPlus className="h-4 w-4" />
+              Add Another Variation
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Save */}
+      <div className="flex items-center justify-end rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+        <button
+          type="button"
+          onClick={() => void createProduct()}
+          disabled={saving || !canSubmit}
+          className="flex items-center gap-2 rounded-xl bg-pink-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-pink-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saving ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              Adding...
+            </>
+          ) : (
+            <>
+              <FiCheck className="h-4 w-4" />
+              Add Product
+            </>
+          )}
+        </button>
+      </div>
+    </div>
   );
 }

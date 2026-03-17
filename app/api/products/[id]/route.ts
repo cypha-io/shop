@@ -25,7 +25,14 @@ type ProductUpdateInput = {
   regularPrice?: string;
   salePrice?: string;
   hasVariations?: boolean;
-  variations?: Array<{ name: string; option: string; additionalPrice?: string }>;
+  variations?: Array<{
+    name: string;
+    option?: string;
+    options?: string[];
+    regularPrice?: string;
+    salePrice?: string;
+    additionalPrice?: string;
+  }>;
 };
 
 async function requireAdmin(request: Request) {
@@ -102,34 +109,54 @@ export async function PUT(request: Request, context: RouteContext) {
 
     const body = (await request.json()) as ProductUpdateInput;
 
-    if (!body.name?.trim() || !body.image?.trim() || !body.category?.trim() || !body.regularPrice?.trim()) {
+    const variationHasPrice =
+      Boolean(body.hasVariations) &&
+      Array.isArray(body.variations) &&
+      body.variations.some(variation => Boolean(variation?.regularPrice?.trim()));
+
+    if (!body.name?.trim() || !body.image?.trim() || !body.category?.trim() || (!body.regularPrice?.trim() && !variationHasPrice)) {
       return Response.json({ error: 'Missing required product fields' }, { status: 400 });
     }
 
     client = await pool.connect();
     await ensureProductSchema(client);
-    const regularPrice = body.regularPrice.trim();
+    const regularPrice = body.regularPrice?.trim() || '';
     const salePrice = body.salePrice?.trim() || null;
     const normalizedImageUrls = Array.isArray(body.imageUrls)
       ? body.imageUrls.map(url => url?.trim()).filter((url): url is string => Boolean(url)).slice(0, 3)
       : [];
     const productImage = normalizedImageUrls[0] || body.image.trim();
-    const finalPrice = regularPrice;
+
+    let result;
+    const normalizedVariations = Array.isArray(body.variations)
+      ? body.variations.flatMap(variation => {
+          const variationName = variation?.name?.trim();
+          const options = Array.isArray(variation?.options)
+            ? variation.options.map(option => option?.trim()).filter((option): option is string => Boolean(option))
+            : variation?.option?.trim()
+            ? [variation.option.trim()]
+            : [];
+
+          if (!variationName || options.length === 0) {
+            return [];
+          }
+
+          return options.map(option => ({
+            name: variationName,
+            option,
+            regularPrice: variation.regularPrice?.trim() || null,
+            salePrice: variation.salePrice?.trim() || null,
+            additionalPrice: variation.additionalPrice?.trim() || '0',
+          }));
+        })
+      : [];
+
+    const firstVariationPrice = normalizedVariations.find(variation => variation.regularPrice)?.regularPrice || '';
+    const finalPrice = regularPrice || firstVariationPrice;
 
     if (!finalPrice) {
       return Response.json({ error: 'A price value is required' }, { status: 400 });
     }
-
-    let result;
-    const normalizedVariations = Array.isArray(body.variations)
-      ? body.variations
-          .filter(variation => variation?.name?.trim() && variation?.option?.trim())
-          .map(variation => ({
-            name: variation.name.trim(),
-            option: variation.option.trim(),
-            additionalPrice: variation.additionalPrice?.trim() || '0',
-          }))
-      : [];
 
     try {
       result = await client.query(
