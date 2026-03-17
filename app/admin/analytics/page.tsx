@@ -70,7 +70,7 @@ export default function AdminAnalyticsPage() {
         <h1 className="text-3xl font-black text-slate-900">Analytics</h1>
         <p className="mt-1 text-sm text-slate-600">Business trends and performance metrics.</p>
 
-        {error && <p className="mt-5 rounded-lg bg-pink-50 p-3 text-sm font-semibold text-pink-700">{error}</p>}
+        {error && <p className="mt-5 rounded-lg bg-orange-50 p-3 text-sm font-semibold text-orange-600">{error}</p>}
 
         {loading ? (
           <div className="mt-6 text-slate-600">Loading analytics...</div>

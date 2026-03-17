@@ -20,6 +20,7 @@ type ProductInput = {
   isFeatured?: boolean;
   regularPrice?: string;
   salePrice?: string;
+  stock?: number | null;
   hasVariations?: boolean;
   variations?: Array<{
     name: string;
@@ -51,6 +52,7 @@ async function ensureProductSchema(client: pg.PoolClient) {
   await client.query('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "hasVariations" BOOLEAN NOT NULL DEFAULT FALSE');
   await client.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS variations JSONB NOT NULL DEFAULT '[]'::jsonb`);
   await client.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "imageUrls" JSONB NOT NULL DEFAULT '[]'::jsonb`);
+  await client.query('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS stock INTEGER');
 }
 
 export async function GET(request: Request) {
@@ -180,11 +182,13 @@ export async function POST(request: Request) {
       return Response.json({ error: 'A price value is required' }, { status: 400 });
     }
 
+    const stock = body.stock !== undefined && body.stock !== null ? Number(body.stock) : null;
+
     try {
       result = await client.query(
         `
-        INSERT INTO "Product" (name, price, image, "imageUrls", category, description, "isFeatured", "regularPrice", "salePrice", "hasVariations", variations)
-        VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9, $10, $11::jsonb)
+        INSERT INTO "Product" (name, price, image, "imageUrls", category, description, "isFeatured", "regularPrice", "salePrice", "hasVariations", variations, stock)
+        VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9, $10, $11::jsonb, $12)
         RETURNING *
         `,
         [
@@ -199,6 +203,7 @@ export async function POST(request: Request) {
           salePrice,
           Boolean(body.hasVariations),
           JSON.stringify(normalizedVariations),
+          stock,
         ]
       );
     } catch (error) {

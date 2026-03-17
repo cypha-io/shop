@@ -57,6 +57,12 @@ export default function AdminOrdersPage() {
     setOrders(prev => prev.map(order => (order.id === id ? { ...order, status } : order)));
   };
 
+  const resetRowStatus = (id: number) => {
+    const initial = originalStatuses[id];
+    if (!initial) return;
+    setRowStatus(id, initial);
+  };
+
   const saveStatus = async (order: Order) => {
     try {
       setSaving(prev => ({ ...prev, [order.id]: true }));
@@ -93,7 +99,7 @@ export default function AdminOrdersPage() {
         <div className="fixed right-4 top-4 z-50">
           <div
             className={`rounded-lg px-4 py-3 text-sm font-semibold shadow-lg ${
-              toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-pink-600 text-white'
+              toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-orange-500 text-white'
             }`}
           >
             {toast.message}
@@ -124,9 +130,9 @@ export default function AdminOrdersPage() {
           ) : orders.length === 0 ? (
             <div className="p-5 text-slate-600">No orders found.</div>
           ) : (
-            <table className="w-full min-w-[860px] bg-white">
+            <table className="w-full min-w-[900px] bg-white">
               <thead>
-                <tr className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-4 py-3">Order</th>
                   <th className="px-4 py-3">Customer</th>
                   <th className="px-4 py-3">Date</th>
@@ -138,10 +144,12 @@ export default function AdminOrdersPage() {
               </thead>
               <tbody>
                 {orders.map(order => (
-                  <tr key={order.id} className="border-t border-slate-100 text-sm">
-                    <td className="px-4 py-3 font-bold text-slate-900">{order.orderNumber}</td>
+                  <tr key={order.id} className="border-t border-slate-100 text-sm transition-colors hover:bg-slate-50/70">
+                    <td className="px-4 py-3 font-bold text-slate-900">
+                      <span className="inline-flex rounded-md bg-slate-100 px-2 py-1 font-mono text-xs text-slate-700">{order.orderNumber}</span>
+                    </td>
                     <td className="px-4 py-3 text-slate-700">{order.customerName}</td>
-                    <td className="px-4 py-3 text-slate-700">{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-slate-700">{new Date(order.createdAt).toLocaleString()}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
@@ -157,7 +165,7 @@ export default function AdminOrdersPage() {
                       <select
                         value={order.status}
                         onChange={event => setRowStatus(order.id, event.target.value as OrderStatus)}
-                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                       >
                         <option value="Pending">Pending</option>
                         <option value="Delivered">Delivered</option>
@@ -166,14 +174,24 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-4 py-3 font-bold text-slate-900">GH₵{Number(order.total).toFixed(2)}</td>
                     <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => void saveStatus(order)}
-                        disabled={saving[order.id] || originalStatuses[order.id] === order.status}
-                        className="rounded-lg bg-pink-600 px-3 py-2 text-xs font-semibold text-white hover:bg-pink-700 disabled:opacity-50"
-                      >
-                        {saving[order.id] ? 'Saving...' : 'Save'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void saveStatus(order)}
+                          disabled={saving[order.id] || originalStatuses[order.id] === order.status}
+                          className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {saving[order.id] ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => resetRowStatus(order.id)}
+                          disabled={saving[order.id] || originalStatuses[order.id] === order.status}
+                          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Reset
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

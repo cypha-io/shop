@@ -114,16 +114,16 @@ export default function CheckoutPage() {
             <h2 className="text-2xl font-black text-gray-900 mb-3">Order placed successfully</h2>
             <p className="text-gray-600 mb-6">Thank you. We received your order and will contact you shortly.</p>
             {placedOrderNumber && (
-              <p className="text-sm font-bold text-pink-600 mb-6">Order Number: {placedOrderNumber}</p>
+              <p className="text-sm font-bold text-orange-500 mb-6">Order Number: {placedOrderNumber}</p>
             )}
-            <Link href="/products" className="inline-block bg-pink-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-pink-700">
+            <Link href="/products" className="inline-block bg-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-orange-600">
               Continue Shopping
             </Link>
           </div>
         ) : items.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-2xl text-gray-500 mb-6">Your cart is empty</p>
-            <Link href="/products" className="inline-block bg-pink-600 text-white px-8 py-3 rounded-full font-bold hover:bg-pink-700">
+            <Link href="/products" className="inline-block bg-orange-500 text-white px-8 py-3 rounded-full font-bold hover:bg-orange-600">
               Browse Products
             </Link>
           </div>
@@ -137,7 +137,7 @@ export default function CheckoutPage() {
                 value={form.fullName}
                 onChange={(e) => onChange('fullName', e.target.value)}
                 placeholder="Full name"
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500"
                 required
               />
 
@@ -150,7 +150,7 @@ export default function CheckoutPage() {
                   pattern="0[0-9]{9}"
                   maxLength={10}
                   placeholder="0XXXXXXXXX"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500"
                   required
                 />
                 <input
@@ -158,7 +158,7 @@ export default function CheckoutPage() {
                   value={form.email}
                   onChange={(e) => onChange('email', e.target.value)}
                   placeholder="Email (optional)"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500"
                 />
               </div>
 
@@ -167,7 +167,7 @@ export default function CheckoutPage() {
                 value={form.address}
                 onChange={(e) => onChange('address', e.target.value)}
                 placeholder="Street address"
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500"
                 required
               />
 
@@ -176,7 +176,7 @@ export default function CheckoutPage() {
                 value={form.city}
                 onChange={(e) => onChange('city', e.target.value)}
                 placeholder="City"
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500"
                 required
               />
 
@@ -185,7 +185,7 @@ export default function CheckoutPage() {
                 onChange={(e) => onChange('notes', e.target.value)}
                 placeholder="Delivery notes (optional)"
                 rows={4}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500"
               />
 
               <div>
@@ -202,7 +202,7 @@ export default function CheckoutPage() {
                       onClick={() => onChange('paymentMethod', option.value)}
                       className={`px-4 py-2 rounded-full border text-sm font-semibold ${
                         form.paymentMethod === option.value
-                          ? 'bg-pink-600 text-white border-pink-600'
+                          ? 'bg-orange-500 text-white border-orange-500'
                           : 'bg-white text-gray-700 border-gray-200'
                       }`}
                     >
@@ -239,18 +239,18 @@ export default function CheckoutPage() {
                 </div>
                 <div className="border-t pt-3 flex justify-between">
                   <span className="font-black text-lg">Total</span>
-                  <span className="font-black text-xl text-pink-600">GH₵{total.toFixed(2)}</span>
+                  <span className="font-black text-xl text-orange-500">GH₵{total.toFixed(2)}</span>
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={!canPlaceOrder || submitting}
-                className="w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-3.5 rounded-xl font-black text-base hover:from-pink-500 hover:to-pink-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-400 text-white py-3.5 rounded-xl font-black text-base hover:from-orange-400 hover:to-orange-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Placing order...' : 'Place Order'}
               </button>
-              {submitError && <p className="mt-3 text-sm font-semibold text-pink-600">{submitError}</p>}
+              {submitError && <p className="mt-3 text-sm font-semibold text-orange-500">{submitError}</p>}
             </div>
           </form>
         )}

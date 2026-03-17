@@ -109,7 +109,7 @@ export default async function MenuProductPage({ params }: PageProps) {
       <main className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
         <Link
           href={`/menu/${category}`}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-pink-600 hover:text-pink-700 mb-6"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-orange-500 hover:text-orange-600 mb-6"
         >
           <FiArrowLeft />
           Back to {categoryLabel}
@@ -120,7 +120,7 @@ export default async function MenuProductPage({ params }: PageProps) {
             <ProductImageGallery images={galleryImages} productName={product.name} />
 
             <div className="p-6 md:p-10 flex flex-col">
-              <div className="mb-4 inline-flex items-center gap-2 self-start rounded-full bg-pink-100 px-4 py-2 text-sm font-bold text-pink-700">
+              <div className="mb-4 inline-flex items-center gap-2 self-start rounded-full bg-orange-50 px-4 py-2 text-sm font-bold text-orange-600">
                 {product.category}
               </div>
 
@@ -133,13 +133,13 @@ export default async function MenuProductPage({ params }: PageProps) {
               <div className="mt-auto">
                 <p className="text-sm font-semibold text-gray-500 mb-2">Price</p>
                 <div className="mb-6 flex items-end gap-3">
-                  <p className="text-3xl md:text-4xl font-black text-pink-600">{displayPrice}</p>
+                  <p className="text-3xl md:text-4xl font-black text-orange-500">{displayPrice}</p>
                   {showStruckRegular ? <p className="text-lg font-semibold text-gray-400 line-through">{regularPriceLabel}</p> : null}
                 </div>
 
                 <AddToCartButton
                   product={cartProduct}
-                  className="w-full md:w-auto inline-flex items-center justify-center gap-3 rounded-xl bg-pink-600 px-6 py-4 text-white font-bold hover:bg-pink-700 transition-colors"
+                  className="w-full md:w-auto inline-flex items-center justify-center gap-3 rounded-xl bg-orange-500 px-6 py-4 text-white font-bold hover:bg-orange-600 transition-colors"
                 />
               </div>
             </div>

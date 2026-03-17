@@ -7,7 +7,7 @@ import { FiFacebook, FiInstagram, FiTwitter } from 'react-icons/fi';
 export default function Footer() {
   return (
     <footer className="text-white mt-16 mb-4 mx-4">
-      <div className="max-w-7xl mx-auto rounded-3xl overflow-hidden shadow-lg bg-pink-600">
+      <div className="max-w-7xl mx-auto rounded-3xl overflow-hidden shadow-lg bg-orange-500">
         <div className="px-6 py-10">
           <div className="max-w-3xl mx-auto space-y-5 text-center">
             <Link href="/" className="flex items-center justify-center">

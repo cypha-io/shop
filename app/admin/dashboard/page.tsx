@@ -76,14 +76,14 @@ export default function AdminDashboardPage() {
             <h1 className="text-3xl md:text-4xl font-black text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600 mt-2">Monitor sales, orders, and catalog performance.</p>
           </div>
-          <Link href="/admin/orders" className="px-4 py-2 rounded-xl bg-pink-600 text-white font-bold hover:bg-pink-700">
+          <Link href="/admin/orders" className="px-4 py-2 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600">
             View Full Orders
           </Link>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-xl border border-pink-200 bg-pink-50 p-4">
-            <p className="text-sm font-semibold text-pink-700">{error}</p>
+          <div className="mb-6 rounded-xl border border-orange-100 bg-orange-50 p-4">
+            <p className="text-sm font-semibold text-orange-600">{error}</p>
           </div>
         )}
 
@@ -130,7 +130,7 @@ export default function AdminDashboardPage() {
                 <p className="text-sm font-semibold text-gray-500">Products</p>
                 <p className="text-2xl font-black text-gray-900">{products.length}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
                 <FiPackage />
               </div>
             </div>
@@ -169,13 +169,13 @@ export default function AdminDashboardPage() {
                           order.status === 'Delivered'
                             ? 'bg-green-100 text-green-700'
                             : order.status === 'Cancelled'
-                              ? 'bg-pink-100 text-pink-700'
+                              ? 'bg-orange-50 text-orange-600'
                               : 'bg-yellow-100 text-yellow-700'
                         }`}>
                           {order.status}
                         </span>
                       </td>
-                      <td className="px-5 py-3 font-bold text-pink-600">GH₵{Number(order.total).toFixed(2)}</td>
+                      <td className="px-5 py-3 font-bold text-orange-500">GH₵{Number(order.total).toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -97,7 +97,7 @@ export default function SplashScreen() {
 
       {/* Loading bar */}
       <div className="mt-6 w-48 h-1 bg-gray-100 rounded-full overflow-hidden">
-        <div className="h-full bg-pink-500 rounded-full animate-loading-bar" />
+        <div className="h-full bg-orange-400 rounded-full animate-loading-bar" />
       </div>
     </div>
   );

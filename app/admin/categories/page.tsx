@@ -140,7 +140,7 @@ export default function AdminCategoriesPage() {
         <div className="fixed right-4 top-4 z-50">
           <div
             className={`rounded-lg px-4 py-3 text-sm font-semibold shadow-lg ${
-              toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-pink-600 text-white'
+              toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-orange-500 text-white'
             }`}
           >
             {toast.message}
@@ -165,7 +165,7 @@ export default function AdminCategoriesPage() {
               type="button"
               onClick={() => void addCategory()}
               disabled={saving || uploading || !newCategory.trim()}
-              className="rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700 disabled:opacity-50"
+              className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Add Category'}
             </button>
@@ -190,7 +190,7 @@ export default function AdminCategoriesPage() {
               type="button"
               onClick={() => imageInputRef.current?.click()}
               disabled={uploading}
-              className="mt-3 rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700 disabled:opacity-50"
+              className="mt-3 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
             >
               {uploading ? 'Uploading...' : 'Upload Image'}
             </button>
@@ -237,7 +237,7 @@ export default function AdminCategoriesPage() {
                         type="button"
                         onClick={() => void deleteCategory(category)}
                         disabled={deletingId === category.id}
-                        className="rounded-lg bg-pink-100 px-3 py-2 text-xs font-semibold text-pink-700 disabled:opacity-50"
+                        className="rounded-lg bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-600 disabled:opacity-50"
                       >
                         {deletingId === category.id ? 'Deleting...' : 'Delete'}
                       </button>

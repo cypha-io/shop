@@ -164,7 +164,7 @@ export default function AccountPage() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
-          <div className="bg-gradient-to-br from-pink-600 to-pink-700 text-white rounded-3xl p-8 shadow-xl">
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-3xl p-8 shadow-xl">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center">
                 <FiPhone className="text-2xl" />
@@ -217,13 +217,13 @@ export default function AccountPage() {
                     pattern="0[0-9]{9}"
                     maxLength={10}
                     placeholder="0XXXXXXXXX"
-                    className="w-full pl-11 pr-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-pink-600 focus:outline-none text-base"
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none text-base"
                   />
                 </div>
                 <button
                   onClick={lookupPhone}
                   disabled={loading}
-                  className="w-full mt-6 bg-pink-600 text-white py-3 rounded-2xl font-bold hover:bg-pink-700 transition-colors disabled:opacity-60"
+                  className="w-full mt-6 bg-orange-500 text-white py-3 rounded-2xl font-bold hover:bg-orange-600 transition-colors disabled:opacity-60"
                 >
                   {loading ? 'Checking...' : 'Continue'}
                 </button>
@@ -239,12 +239,12 @@ export default function AccountPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
-                  className="w-full mt-2 px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-pink-600 focus:outline-none text-base"
+                  className="w-full mt-2 px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none text-base"
                 />
                 <button
                   onClick={login}
                   disabled={loading}
-                  className="w-full mt-6 bg-pink-600 text-white py-3 rounded-2xl font-bold hover:bg-pink-700 transition-colors disabled:opacity-60"
+                  className="w-full mt-6 bg-orange-500 text-white py-3 rounded-2xl font-bold hover:bg-orange-600 transition-colors disabled:opacity-60"
                 >
                   {loading ? 'Signing in...' : 'Sign In'}
                 </button>
@@ -269,55 +269,55 @@ export default function AccountPage() {
                     value={profile.fullName}
                     onChange={(e) => setProfile(prev => ({ ...prev, fullName: e.target.value }))}
                     placeholder="Full name"
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-pink-600 focus:outline-none text-base"
+                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none text-base"
                   />
                   <input
                     type="email"
                     value={profile.email}
                     onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
                     placeholder="Email (optional)"
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-pink-600 focus:outline-none text-base"
+                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none text-base"
                   />
                   <input
                     type="text"
                     value={profile.address}
                     onChange={(e) => setProfile(prev => ({ ...prev, address: e.target.value }))}
                     placeholder="Address (optional)"
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-pink-600 focus:outline-none text-base"
+                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none text-base"
                   />
                   <input
                     type="text"
                     value={profile.city}
                     onChange={(e) => setProfile(prev => ({ ...prev, city: e.target.value }))}
                     placeholder="City"
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-pink-600 focus:outline-none text-base"
+                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none text-base"
                   />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create password (min 6 chars)"
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-pink-600 focus:outline-none text-base"
+                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none text-base"
                   />
                 </div>
                 <button
                   onClick={signup}
                   disabled={loading}
-                  className="w-full mt-6 bg-pink-600 text-white py-3 rounded-2xl font-bold hover:bg-pink-700 transition-colors disabled:opacity-60"
+                  className="w-full mt-6 bg-orange-500 text-white py-3 rounded-2xl font-bold hover:bg-orange-600 transition-colors disabled:opacity-60"
                 >
                   {loading ? 'Creating account...' : 'Create Account'}
                 </button>
               </>
             )}
 
-            {authError && <p className="mt-3 text-sm font-semibold text-pink-600">{authError}</p>}
+            {authError && <p className="mt-3 text-sm font-semibold text-orange-500">{authError}</p>}
 
             <p className="text-xs text-gray-500 mt-4">
               By continuing, you agree to receive account-related messages.
             </p>
 
             <div className="mt-6">
-              <Link href="/" className="text-sm font-semibold text-gray-600 hover:text-pink-600">
+              <Link href="/" className="text-sm font-semibold text-gray-600 hover:text-orange-500">
                 Back to home
               </Link>
             </div>

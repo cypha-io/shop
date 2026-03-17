@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { FiArrowLeft, FiTag } from 'react-icons/fi';
+import { FiArrowLeft } from 'react-icons/fi';
 import pg from 'pg';
 
-import AddToCartButton from '@/components/AddToCartButton';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductImageGallery from '@/components/ProductImageGallery';
+import ProductPageClient from '@/components/ProductPageClient';
 
 const { Pool } = pg;
 
@@ -28,6 +28,14 @@ type Product = {
   imageUrls?: string[] | null;
   category: string;
   description?: string;
+  stock?: number | null;
+  hasVariations?: boolean;
+  variations?: Array<{
+    name: string;
+    option: string;
+    regularPrice?: string | null;
+    salePrice?: string | null;
+  }> | null;
 };
 
 type PageProps = {
@@ -83,15 +91,46 @@ export default async function ProductPage({ params }: PageProps) {
   const normalizedRegularPrice = product.regularPrice?.trim() || '';
   const normalizedSalePrice = product.salePrice?.trim() || '';
   const galleryImages = Array.isArray(product.imageUrls) && product.imageUrls.length > 0 ? product.imageUrls : [product.image];
-  const hasSale = normalizedSalePrice.length > 0;
-  const displayPrice = formatCedi(hasSale ? normalizedSalePrice : normalizedRegularPrice || product.price);
-  const regularPriceLabel = formatCedi(normalizedRegularPrice || product.price);
-  const showStruckRegular = hasSale && regularPriceLabel !== displayPrice;
+  const isSoldOut = product.stock !== undefined && product.stock !== null && product.stock <= 0;
 
-  const cartProduct = {
-    ...product,
-    price: displayPrice,
+  // Extract min/max prices from variations if they exist
+  const getVariationPrices = () => {
+    if (!product.hasVariations || !Array.isArray(product.variations) || product.variations.length === 0) {
+      return null;
+    }
+    const prices = product.variations
+      .flatMap(v => {
+        const sale = v.salePrice?.trim();
+        const reg = v.regularPrice?.trim();
+        return [sale || reg].filter((p): p is string => Boolean(p));
+      })
+      .map(p => parseFloat(p.replace(/[^\d.]/g, '')))
+      .filter(n => !isNaN(n) && n > 0);
+
+    if (prices.length === 0) return null;
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    return minPrice === maxPrice ? null : { min: minPrice, max: maxPrice };
   };
+
+  const variationRange = getVariationPrices();
+  const hasSale = variationRange ? false : normalizedSalePrice.length > 0;
+  const displayPrice = variationRange
+    ? `GH₵${variationRange.min.toFixed(0)} - GH₵${variationRange.max.toFixed(0)}`
+    : formatCedi(hasSale ? normalizedSalePrice : normalizedRegularPrice || product.price);
+  const regularPriceLabel = formatCedi(normalizedRegularPrice || product.price);
+  const showStruckRegular = !variationRange && hasSale && regularPriceLabel !== displayPrice;
+
+  // Group variations by type
+  const groupedVariations: Map<string, Array<{ name: string; option: string; regularPrice?: string | null; salePrice?: string | null }>> = (() => {
+    if (!Array.isArray(product.variations)) return new Map();
+    const grouped = new Map<string, Array<{ name: string; option: string; regularPrice?: string | null; salePrice?: string | null }>>();
+    for (const v of product.variations) {
+      if (!grouped.has(v.name)) grouped.set(v.name, []);
+      grouped.get(v.name)!.push(v);
+    }
+    return grouped;
+  })();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -100,41 +139,31 @@ export default async function ProductPage({ params }: PageProps) {
       <main className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-pink-600 hover:text-pink-700 mb-6"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-orange-500 hover:text-orange-600 mb-6"
         >
           <FiArrowLeft />
           Back to products
         </Link>
 
-        <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
           <div className="grid grid-cols-1 md:grid-cols-2">
-            <ProductImageGallery images={galleryImages} productName={product.name} />
-
-            <div className="p-6 md:p-10 flex flex-col">
-              <div className="mb-4 inline-flex items-center gap-2 self-start rounded-full bg-pink-100 px-4 py-2 text-sm font-bold text-pink-700">
-                <FiTag />
-                {product.category}
-              </div>
-
-              <h1 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-4">{product.name}</h1>
-
-              <p className="text-gray-600 text-base md:text-lg mb-8">
-                {product.description || 'Premium quality product selected for long wear, natural finish, and comfort.'}
-              </p>
-
-              <div className="mt-auto">
-                <p className="text-sm font-semibold text-gray-500 mb-2">Price</p>
-                <div className="mb-6 flex items-end gap-3">
-                  <p className="text-3xl md:text-4xl font-black text-pink-600">{displayPrice}</p>
-                  {showStruckRegular ? <p className="text-lg font-semibold text-gray-400 line-through">{regularPriceLabel}</p> : null}
-                </div>
-
-                <AddToCartButton
-                  product={cartProduct}
-                  className="w-full md:w-auto inline-flex items-center justify-center gap-3 rounded-xl bg-pink-600 px-6 py-4 text-white font-bold hover:bg-pink-700 transition-colors"
-                />
+            <div>
+              <ProductImageGallery images={galleryImages} productName={product.name} />
+              <div className="px-6 pb-6 pt-4 md:px-8 md:pb-8">
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed">
+                  {product.description || 'Premium quality product selected for long wear, natural finish, and comfort.'}
+                </p>
               </div>
             </div>
+
+            <ProductPageClient
+              product={product}
+              displayPrice={displayPrice}
+              regularPriceLabel={regularPriceLabel}
+              showStruckRegular={showStruckRegular}
+              isSoldOut={isSoldOut}
+              groupedVariations={groupedVariations}
+            />
           </div>
         </div>
       </main>

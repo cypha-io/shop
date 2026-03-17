@@ -48,7 +48,7 @@ export default function CartPage() {
                   
                   <div className="flex-1">
                     <h3 className="font-black text-lg text-gray-800">{item.name}</h3>
-                    <p className="text-pink-600 font-bold">{item.price}</p>
+                    <p className="text-orange-500 font-bold">{item.price}</p>
                   </div>
 
                   <div className="flex items-center justify-between sm:justify-start gap-3">
@@ -61,13 +61,13 @@ export default function CartPage() {
                         <FiPlus className="text-gray-600" />
                       </button>
                     </div>
-                    <button onClick={() => removeItem(item.id)} className="w-10 h-10 bg-pink-50 hover:bg-pink-100 rounded-full flex items-center justify-center sm:hidden">
-                      <FiTrash2 className="text-pink-600" />
+                    <button onClick={() => removeItem(item.id)} className="w-10 h-10 bg-orange-50 hover:bg-orange-50 rounded-full flex items-center justify-center sm:hidden">
+                      <FiTrash2 className="text-orange-500" />
                     </button>
                   </div>
 
-                  <button onClick={() => removeItem(item.id)} className="hidden sm:flex w-10 h-10 bg-pink-50 hover:bg-pink-100 rounded-full items-center justify-center">
-                    <FiTrash2 className="text-pink-600" />
+                  <button onClick={() => removeItem(item.id)} className="hidden sm:flex w-10 h-10 bg-orange-50 hover:bg-orange-50 rounded-full items-center justify-center">
+                    <FiTrash2 className="text-orange-500" />
                   </button>
                 </div>
               ))}
@@ -88,13 +88,13 @@ export default function CartPage() {
                 </div>
                 <div className="border-t pt-3 flex justify-between">
                   <span className="font-black text-lg">Total</span>
-                  <span className="font-black text-xl text-pink-600">GH₵{total.toFixed(2)}</span>
+                  <span className="font-black text-xl text-orange-500">GH₵{total.toFixed(2)}</span>
                 </div>
               </div>
 
               <Link
                 href="/checkout"
-                className="block w-full text-center bg-gradient-to-r from-pink-600 to-pink-500 text-white py-3.5 sm:py-4 rounded-xl font-black text-base sm:text-lg hover:from-pink-500 hover:to-pink-400 transition-all"
+                className="block w-full text-center bg-gradient-to-r from-orange-500 to-orange-400 text-white py-3.5 sm:py-4 rounded-xl font-black text-base sm:text-lg hover:from-orange-400 hover:to-orange-300 transition-all"
               >
                 Proceed to Checkout
               </Link>
@@ -103,7 +103,7 @@ export default function CartPage() {
         ) : (
           <div className="text-center py-20">
             <p className="text-2xl text-gray-500 mb-6">Your cart is empty</p>
-            <Link href="/products" className="inline-block bg-pink-600 text-white px-8 py-3 rounded-full font-bold hover:bg-pink-700">
+            <Link href="/products" className="inline-block bg-orange-500 text-white px-8 py-3 rounded-full font-bold hover:bg-orange-600">
               Start Shopping
             </Link>
           </div>

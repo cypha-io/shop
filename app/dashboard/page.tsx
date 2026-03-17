@@ -175,7 +175,7 @@ export default function UserDashboardPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
             <p className="text-sm font-semibold text-gray-500">Cart Items</p>
             <p className="text-3xl font-black text-gray-900 mt-1">{totalItems}</p>
-            <p className="text-sm text-pink-600 font-bold mt-2">GH₵{cartTotal.toFixed(2)}</p>
+            <p className="text-sm text-orange-500 font-bold mt-2">GH₵{cartTotal.toFixed(2)}</p>
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
@@ -213,12 +213,12 @@ export default function UserDashboardPage() {
                       order.status === 'Delivered'
                         ? 'bg-green-100 text-green-700'
                         : order.status === 'Cancelled'
-                          ? 'bg-pink-100 text-pink-700'
+                          ? 'bg-orange-50 text-orange-600'
                           : 'bg-yellow-100 text-yellow-700'
                     }`}>
                       {order.status}
                     </span>
-                    <p className="font-black text-pink-600">GH₵{Number(order.total).toFixed(2)}</p>
+                    <p className="font-black text-orange-500">GH₵{Number(order.total).toFixed(2)}</p>
                   </div>
                 ))}
               </div>
@@ -232,7 +232,7 @@ export default function UserDashboardPage() {
                 <FiPackage />
                 Browse Products
               </Link>
-              <Link href="/cart" className="w-full px-4 py-3 rounded-xl bg-pink-600 text-white font-bold hover:bg-pink-700 flex items-center gap-2">
+              <Link href="/cart" className="w-full px-4 py-3 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 flex items-center gap-2">
                 <FiShoppingCart />
                 Go to Cart
               </Link>
@@ -263,7 +263,7 @@ export default function UserDashboardPage() {
               value={profile.fullName}
               onChange={(e) => setProfile(prev => ({ ...prev, fullName: e.target.value }))}
               placeholder="Full name"
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
+              className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500"
             />
 
             <div className="flex gap-2">
@@ -275,7 +275,7 @@ export default function UserDashboardPage() {
                 pattern="0[0-9]{9}"
                 maxLength={10}
                 placeholder="0XXXXXXXXX"
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500"
               />
               <button
                 type="button"
@@ -291,7 +291,7 @@ export default function UserDashboardPage() {
               value={profile.email}
               onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
               placeholder="Email"
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
+              className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500"
             />
 
             <input
@@ -299,7 +299,7 @@ export default function UserDashboardPage() {
               value={profile.city}
               onChange={(e) => setProfile(prev => ({ ...prev, city: e.target.value }))}
               placeholder="City"
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
+              className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500"
             />
 
             <input
@@ -307,7 +307,7 @@ export default function UserDashboardPage() {
               value={profile.address}
               onChange={(e) => setProfile(prev => ({ ...prev, address: e.target.value }))}
               placeholder="Address"
-              className="w-full sm:col-span-2 border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-pink-600"
+              className="w-full sm:col-span-2 border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500"
             />
           </div>
 
@@ -316,7 +316,7 @@ export default function UserDashboardPage() {
               type="button"
               onClick={saveProfile}
               disabled={profileSaving}
-              className="px-6 py-3 rounded-xl bg-pink-600 text-white font-bold hover:bg-pink-700 disabled:opacity-60"
+              className="px-6 py-3 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 disabled:opacity-60"
             >
               {profileSaving ? 'Saving...' : 'Save Details'}
             </button>

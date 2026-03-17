@@ -113,7 +113,7 @@ export default function AdminUsersPage() {
         <div className="fixed right-4 top-4 z-50">
           <div
             className={`rounded-lg px-4 py-3 text-sm font-semibold shadow-lg ${
-              toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-pink-600 text-white'
+              toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-orange-500 text-white'
             }`}
           >
             {toast.message}
@@ -169,7 +169,7 @@ export default function AdminUsersPage() {
                         type="button"
                         onClick={() => void saveUser(user)}
                         disabled={saving[user.id] || !hasUserChanges(user) || !user.fullName.trim()}
-                        className="rounded-lg bg-pink-600 px-3 py-2 text-xs font-semibold text-white hover:bg-pink-700 disabled:opacity-50"
+                        className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
                       >
                         {saving[user.id] ? 'Saving...' : 'Save'}
                       </button>

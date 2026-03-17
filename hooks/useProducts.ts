@@ -11,6 +11,13 @@ interface Product {
   category: string;
   description?: string;
   isFeatured?: boolean;
+  hasVariations?: boolean;
+  variations?: Array<{
+    name: string;
+    option: string;
+    regularPrice?: string | null;
+    salePrice?: string | null;
+  }> | null;
   createdAt?: string;
   updatedAt?: string;
 }

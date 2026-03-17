@@ -11,7 +11,7 @@ export default function FeaturedMenu() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-black mb-4 text-gray-900">
-            <span className="text-pink-600">Featured</span> Items
+            <span className="text-orange-500">Featured</span> Items
           </h2>
           <p className="text-xl text-gray-600">Our most loved dishes, hand-picked for you</p>
         </div>

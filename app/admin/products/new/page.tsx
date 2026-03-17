@@ -12,13 +12,17 @@ type ProductForm = {
   imageUrls: string[];
   regularPrice: string;
   salePrice: string;
+  stock: string;
   category: string;
+  isFeatured: boolean;
   hasVariations: boolean;
 };
 
 type VariationForm = {
   name: '' | 'Size' | 'Color' | 'Type';
   options: string[];
+  customOptions: string[];
+  customInput: string;
   regularPrice: string;
   salePrice: string;
 };
@@ -40,7 +44,9 @@ const INITIAL_FORM: ProductForm = {
   imageUrls: [],
   regularPrice: '',
   salePrice: '',
+  stock: '',
   category: '',
+  isFeatured: false,
   hasVariations: false,
 };
 
@@ -51,10 +57,10 @@ const VARIATION_OPTIONS: Record<'Size' | 'Color' | 'Type', string[]> = {
 };
 
 const inputCls =
-  'mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition placeholder:text-gray-400';
+  'mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition placeholder:text-gray-400';
 
 const selectCls =
-  'mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition appearance-none cursor-pointer';
+  'mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition appearance-none cursor-pointer';
 
 export default function AddProductPage() {
   const router = useRouter();
@@ -65,7 +71,7 @@ export default function AddProductPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
-  const [variations, setVariations] = useState<VariationForm[]>([{ name: '', options: [], regularPrice: '', salePrice: '' }]);
+  const [variations, setVariations] = useState<VariationForm[]>([{ name: '', options: [], customOptions: [], customInput: '', regularPrice: '', salePrice: '' }]);
   const [toast, setToast] = useState<Toast | null>(null);
 
   const hasVariationPriceSet =
@@ -155,8 +161,10 @@ export default function AddProductPage() {
           imageUrls: form.imageUrls,
           regularPrice: hasVariationPriceSet ? '' : form.regularPrice.trim(),
           salePrice: hasVariationPriceSet ? '' : form.salePrice.trim(),
+          stock: form.stock.trim() !== '' ? Number(form.stock) : null,
           category: (selectedCategory === '__custom__' ? customCategory : form.category).trim(),
           hasVariations: form.hasVariations,
+          isFeatured: form.isFeatured,
           variations: form.hasVariations
             ? variations
                 .filter(variation => variation.name && variation.options.length > 0)
@@ -167,7 +175,6 @@ export default function AddProductPage() {
                   salePrice: variation.salePrice.trim(),
                 }))
             : [],
-          isFeatured: false,
         }),
       });
 
@@ -287,9 +294,31 @@ export default function AddProductPage() {
         </div>
       </div>
 
-      {/* Pricing */}
+      {/* Pricing & Featured */}
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <h2 className="mb-1 text-xs font-bold uppercase tracking-wider text-gray-400">Pricing</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">Pricing</h2>
+          <label className="flex cursor-pointer items-center gap-2.5">
+            <div className="relative">
+              <input
+                type="checkbox"
+                value="featured"
+                checked={form.isFeatured ?? false}
+                onChange={e => setForm(prev => ({ ...prev, isFeatured: e.target.checked }))}
+                className="sr-only"
+              />
+              <div className={`h-6 w-11 rounded-full transition ${form.isFeatured ? 'bg-orange-500' : 'bg-gray-200'}`} />
+              <div
+                className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                  form.isFeatured ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </div>
+            <span className="text-sm font-semibold text-gray-700">
+              {form.isFeatured ? 'Featured' : 'Not Featured'}
+            </span>
+          </label>
+        </div>
         {hasVariationPriceSet && (
           <p className="mb-4 mt-2 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
             Pricing is controlled by variations below. Base prices are disabled.
@@ -317,6 +346,20 @@ export default function AddProductPage() {
             />
           </label>
         </div>
+        <div className="mt-3">
+          <label className="block text-sm font-semibold text-gray-700">
+            Stock Quantity
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={form.stock}
+              onChange={e => setForm(prev => ({ ...prev, stock: e.target.value }))}
+              placeholder="Leave blank for unlimited"
+              className={inputCls}
+            />
+          </label>
+        </div>
       </div>
 
       {/* Images */}
@@ -341,7 +384,7 @@ export default function AddProductPage() {
             type="button"
             onClick={() => imageInputRef.current?.click()}
             disabled={uploading || form.imageUrls.length >= 3}
-            className="flex items-center gap-2 rounded-xl bg-pink-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-700 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:opacity-50"
           >
             <FiCamera className="h-4 w-4" />
             {uploading ? 'Uploading...' : form.imageUrls.length >= 3 ? 'Max reached' : 'Add Image'}
@@ -368,7 +411,7 @@ export default function AddProductPage() {
                   </button>
                 </div>
                 {i === 0 && (
-                  <span className="absolute bottom-1.5 left-1.5 rounded bg-pink-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  <span className="absolute bottom-1.5 left-1.5 rounded bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                     Main
                   </span>
                 )}
@@ -378,7 +421,7 @@ export default function AddProductPage() {
         ) : (
           <div
             onClick={() => imageInputRef.current?.click()}
-            className="flex h-32 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-gray-200 text-gray-400 transition hover:border-pink-400 hover:text-pink-500"
+            className="flex h-32 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-gray-200 text-gray-400 transition hover:border-orange-300 hover:text-orange-400"
           >
             <div className="text-center">
               <FiCamera className="mx-auto h-8 w-8" />
@@ -403,7 +446,7 @@ export default function AddProductPage() {
                 onChange={e => setForm(prev => ({ ...prev, hasVariations: e.target.checked }))}
                 className="sr-only"
               />
-              <div className={`h-6 w-11 rounded-full transition ${form.hasVariations ? 'bg-pink-600' : 'bg-gray-200'}`} />
+              <div className={`h-6 w-11 rounded-full transition ${form.hasVariations ? 'bg-orange-500' : 'bg-gray-200'}`} />
               <div
                 className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
                   form.hasVariations ? 'translate-x-5' : 'translate-x-0'
@@ -419,7 +462,7 @@ export default function AddProductPage() {
         {form.hasVariations && (
           <div className="mt-4 space-y-3">
             {hasVariationPriceSet && (
-              <p className="rounded-lg border border-pink-100 bg-pink-50 px-3 py-2 text-xs font-medium text-pink-700">
+              <p className="rounded-lg border border-orange-50 bg-orange-50 px-3 py-2 text-xs font-medium text-orange-600">
                 Variation prices active — base product prices are disabled.
               </p>
             )}
@@ -448,11 +491,11 @@ export default function AddProductPage() {
                         onChange={e =>
                           setVariations(prev =>
                             prev.map((row, idx) =>
-                              idx === i ? { ...row, name: e.target.value as VariationForm['name'], options: [] } : row
+                              idx === i ? { ...row, name: e.target.value as VariationForm['name'], options: [], customOptions: [], customInput: '' } : row
                             )
                           )
                         }
-                        className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500 cursor-pointer"
+                        className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-400 cursor-pointer"
                       >
                         <option value="">Select type</option>
                         <option value="Size">Size</option>
@@ -464,40 +507,131 @@ export default function AddProductPage() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-600">
-                      Options{' '}
-                      {variation.name && <span className="font-normal text-gray-400">(hold Ctrl/⌘ for multiple)</span>}
-                    </label>
-                    <select
-                      multiple
-                      value={variation.options}
-                      onChange={e =>
-                        setVariations(prev =>
-                          prev.map((row, idx) =>
-                            idx === i
-                              ? { ...row, options: Array.from(e.target.selectedOptions).map(o => o.value) }
-                              : row
-                          )
-                        )
-                      }
-                      disabled={!variation.name}
-                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:bg-gray-50 disabled:text-gray-400"
-                      size={4}
-                    >
-                      {variation.name
-                        ? VARIATION_OPTIONS[variation.name].map(opt => (
-                            <option key={opt} value={opt}>
-                              {opt}
-                            </option>
-                          ))
-                        : null}
-                    </select>
+                    <label className="mb-1 block text-xs font-semibold text-gray-600">Options</label>
+                    {variation.name ? (
+                      <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 flex flex-wrap gap-x-4 gap-y-2">
+                        {VARIATION_OPTIONS[variation.name].map(opt => (
+                          <label key={opt} className="flex items-center gap-1.5 cursor-pointer select-none text-sm text-gray-800">
+                            <input
+                              type="checkbox"
+                              checked={variation.options.includes(opt)}
+                              onChange={e =>
+                                setVariations(prev =>
+                                  prev.map((row, idx) =>
+                                    idx === i
+                                      ? {
+                                          ...row,
+                                          options: e.target.checked
+                                            ? [...row.options, opt]
+                                            : row.options.filter(o => o !== opt),
+                                        }
+                                      : row
+                                  )
+                                )
+                              }
+                              className="accent-orange-500 h-4 w-4 cursor-pointer"
+                            />
+                            {opt}
+                          </label>
+                        ))}
+                        {variation.customOptions.map(opt => (
+                          <label key={opt} className="flex items-center gap-1.5 cursor-pointer select-none text-sm text-gray-800">
+                            <input
+                              type="checkbox"
+                              checked={variation.options.includes(opt)}
+                              onChange={e =>
+                                setVariations(prev =>
+                                  prev.map((row, idx) =>
+                                    idx === i
+                                      ? {
+                                          ...row,
+                                          options: e.target.checked
+                                            ? [...row.options, opt]
+                                            : row.options.filter(o => o !== opt),
+                                        }
+                                      : row
+                                  )
+                                )
+                              }
+                              className="accent-orange-500 h-4 w-4 cursor-pointer"
+                            />
+                            <span>{opt}</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setVariations(prev =>
+                                  prev.map((row, idx) =>
+                                    idx === i
+                                      ? { ...row, customOptions: row.customOptions.filter(o => o !== opt), options: row.options.filter(o => o !== opt) }
+                                      : row
+                                  )
+                                )
+                              }
+                              className="ml-0.5 text-gray-400 hover:text-red-500 transition-colors leading-none"
+                              aria-label={`Remove ${opt}`}
+                            >
+                              ×
+                            </button>
+                          </label>
+                        ))}
+                        <div className="w-full flex gap-2 mt-1 pt-2 border-t border-gray-100">
+                          <input
+                            value={variation.customInput}
+                            onChange={e =>
+                              setVariations(prev =>
+                                prev.map((row, idx) => idx === i ? { ...row, customInput: e.target.value } : row)
+                              )
+                            }
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = variation.customInput.trim();
+                                if (val && !variation.customOptions.includes(val) && !VARIATION_OPTIONS[variation.name as 'Size' | 'Color' | 'Type']?.includes(val)) {
+                                  setVariations(prev =>
+                                    prev.map((row, idx) =>
+                                      idx === i
+                                        ? { ...row, customOptions: [...row.customOptions, val], options: [...row.options, val], customInput: '' }
+                                        : row
+                                    )
+                                  );
+                                }
+                              }
+                            }}
+                            placeholder="Add custom option…"
+                            className="flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const val = variation.customInput.trim();
+                              if (val && !variation.customOptions.includes(val) && !VARIATION_OPTIONS[variation.name as 'Size' | 'Color' | 'Type']?.includes(val)) {
+                                setVariations(prev =>
+                                  prev.map((row, idx) =>
+                                    idx === i
+                                      ? { ...row, customOptions: [...row.customOptions, val], options: [...row.options, val], customInput: '' }
+                                      : row
+                                  )
+                                );
+                              }
+                            }}
+                            disabled={!variation.customInput.trim() || variation.customOptions.includes(variation.customInput.trim()) || VARIATION_OPTIONS[variation.name as 'Size' | 'Color' | 'Type']?.includes(variation.customInput.trim())}
+                            className="rounded-lg bg-orange-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-40 transition"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400">
+                        Select a variation type first
+                      </div>
+                    )}
                     {variation.options.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {variation.options.map(opt => (
                           <span
                             key={opt}
-                            className="inline-flex items-center rounded-full border border-pink-100 bg-pink-50 px-2.5 py-0.5 text-xs font-semibold text-pink-700"
+                            className="inline-flex items-center rounded-full border border-orange-50 bg-orange-50 px-2.5 py-0.5 text-xs font-semibold text-orange-500"
                           >
                             {opt}
                           </span>
@@ -518,7 +652,7 @@ export default function AddProductPage() {
                         )
                       }
                       placeholder="e.g. GH₵200"
-                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500"
+                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-400"
                     />
                   </label>
                   <label className="block text-xs font-semibold text-gray-600">
@@ -531,7 +665,7 @@ export default function AddProductPage() {
                         )
                       }
                       placeholder="Optional"
-                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500"
+                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-400"
                     />
                   </label>
                 </div>
@@ -541,9 +675,9 @@ export default function AddProductPage() {
             <button
               type="button"
               onClick={() =>
-                setVariations(prev => [...prev, { name: '', options: [], regularPrice: '', salePrice: '' }])
+                setVariations(prev => [...prev, { name: '', options: [], customOptions: [], customInput: '', regularPrice: '', salePrice: '' }])
               }
-              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-pink-200 py-3 text-sm font-semibold text-pink-600 transition hover:border-pink-400 hover:bg-pink-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-orange-100 py-3 text-sm font-semibold text-orange-500 transition hover:border-orange-300 hover:bg-orange-50"
             >
               <FiPlus className="h-4 w-4" />
               Add Another Variation
@@ -558,7 +692,7 @@ export default function AddProductPage() {
           type="button"
           onClick={() => void createProduct()}
           disabled={saving || !canSubmit}
-          className="flex items-center gap-2 rounded-xl bg-pink-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-pink-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? (
             <>

@@ -68,7 +68,7 @@ export default function Categories({ activeCategory }: CategoriesProps) {
               >
                 <div
                   className={`relative overflow-hidden rounded-2xl p-4 shadow-md transition-all hover:-translate-y-1 hover:shadow-xl md:p-5 ${bgStyle} ${
-                    isActive ? 'ring-4 ring-pink-200' : 'ring-1 ring-transparent'
+                    isActive ? 'ring-4 ring-orange-100' : 'ring-1 ring-transparent'
                   }`}
                   style={
                     hasImage

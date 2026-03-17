@@ -38,7 +38,7 @@ export default function ProductImageGallery({ images, productName }: ProductImag
                 type="button"
                 onClick={() => setActiveIndex(index)}
                 className={`relative h-20 overflow-hidden rounded-lg border transition ${
-                  isActive ? 'border-pink-600 ring-2 ring-pink-200' : 'border-gray-200 hover:border-pink-300'
+                  isActive ? 'border-orange-500 ring-2 ring-orange-100' : 'border-gray-200 hover:border-orange-200'
                 }`}
                 aria-label={`Show image ${index + 1}`}
               >

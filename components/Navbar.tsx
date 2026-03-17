@@ -71,7 +71,7 @@ export default function Navbar() {
               <Link
                 href="/"
                 className={`flex items-center gap-3 transition-colors px-6 py-3 rounded-full ${
-                  pathname === '/' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
+                  pathname === '/' ? 'bg-orange-500 text-white' : 'text-gray-800 hover:text-orange-500'
                 }`}
               >
                 <IoHomeSharp className="text-2xl" />
@@ -80,7 +80,7 @@ export default function Navbar() {
               <Link
                 href="/products"
                 className={`flex items-center gap-3 transition-colors px-6 py-3 rounded-full ${
-                  pathname === '/products' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
+                  pathname === '/products' ? 'bg-orange-500 text-white' : 'text-gray-800 hover:text-orange-500'
                 }`}
               >
                 <FiGrid className="text-2xl" />
@@ -89,19 +89,19 @@ export default function Navbar() {
               <Link
                 href="/cart"
                 className={`flex items-center gap-3 transition-colors px-6 py-3 rounded-full relative ${
-                  pathname === '/cart' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
+                  pathname === '/cart' ? 'bg-orange-500 text-white' : 'text-gray-800 hover:text-orange-500'
                 }`}
               >
                 <FiShoppingCart className="text-2xl" />
                 <span className="font-bold text-lg">Cart</span>
-                <span className="absolute -top-1 left-4 bg-pink-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
+                <span className="absolute -top-1 left-4 bg-orange-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
                   {badgeText}
                 </span>
               </Link>
               <Link
                 href="/history"
                 className={`flex items-center gap-3 transition-colors px-6 py-3 rounded-full ${
-                  pathname === '/history' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
+                  pathname === '/history' ? 'bg-orange-500 text-white' : 'text-gray-800 hover:text-orange-500'
                 }`}
               >
                 <FiClock className="text-2xl" />
@@ -113,7 +113,7 @@ export default function Navbar() {
             <div className="hidden md:flex items-center pl-4">
               <Link
                 href={profileHref}
-                className="flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 hover:bg-pink-600 hover:text-white transition-colors"
+                className="flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 hover:bg-orange-500 hover:text-white transition-colors"
               >
                 <ProfileIcon className="text-2xl" />
               </Link>
@@ -123,7 +123,7 @@ export default function Navbar() {
             <div className="md:hidden flex items-center">
               <Link
                 href={profileHref}
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-pink-600 hover:text-white transition-colors"
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-orange-500 hover:text-white transition-colors"
               >
                 <ProfileIcon className="text-lg" />
               </Link>
@@ -138,7 +138,7 @@ export default function Navbar() {
           <Link
             href="/"
             className={`flex items-center gap-2 transition-colors px-3 py-2 rounded-full ${
-              pathname === '/' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
+              pathname === '/' ? 'bg-orange-500 text-white' : 'text-gray-800 hover:text-orange-500'
             }`}
           >
             <IoHomeSharp className="text-lg" />
@@ -147,7 +147,7 @@ export default function Navbar() {
           <Link
             href="/products"
             className={`flex items-center gap-2 transition-colors px-3 py-2 rounded-full ${
-              pathname === '/products' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
+              pathname === '/products' ? 'bg-orange-500 text-white' : 'text-gray-800 hover:text-orange-500'
             }`}
           >
             <FiGrid className="text-lg" />
@@ -156,19 +156,19 @@ export default function Navbar() {
           <Link
             href="/cart"
             className={`flex items-center gap-2 transition-colors px-3 py-2 rounded-full relative ${
-              pathname === '/cart' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
+              pathname === '/cart' ? 'bg-orange-500 text-white' : 'text-gray-800 hover:text-orange-500'
             }`}
           >
             <FiShoppingCart className="text-lg" />
             {pathname === '/cart' && <span className="font-bold text-sm">Cart</span>}
-            <span className="absolute -top-0.5 left-2 bg-pink-600 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center border border-white">
+            <span className="absolute -top-0.5 left-2 bg-orange-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center border border-white">
               {badgeText}
             </span>
           </Link>
           <Link
             href="/history"
             className={`flex items-center gap-2 transition-colors px-3 py-2 rounded-full ${
-              pathname === '/history' ? 'bg-pink-600 text-white' : 'text-gray-800 hover:text-pink-600'
+              pathname === '/history' ? 'bg-orange-500 text-white' : 'text-gray-800 hover:text-orange-500'
             }`}
           >
             <FiClock className="text-lg" />

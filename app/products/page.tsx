@@ -55,7 +55,7 @@ export default function ProductsPage() {
                   placeholder="Search for wigs, hair extensions, bundles..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-14 pr-6 py-4 rounded-full border-2 border-gray-200 focus:border-pink-600 focus:outline-none text-lg"
+                  className="w-full pl-14 pr-6 py-4 rounded-full border-2 border-gray-200 focus:border-orange-500 focus:outline-none text-lg"
                 />
               </div>
 
@@ -68,8 +68,8 @@ export default function ProductsPage() {
                       onClick={() => setActiveCategory(category)}
                       className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors border ${
                         activeCategory === category
-                          ? 'bg-pink-600 text-white border-pink-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-pink-300'
+                          ? 'bg-orange-500 text-white border-orange-500'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-orange-200'
                       }`}
                     >
                       {category}
@@ -82,7 +82,7 @@ export default function ProductsPage() {
                     id="sort"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold text-gray-700 focus:outline-none focus:border-pink-600"
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold text-gray-700 focus:outline-none focus:border-orange-500"
                   >
                     <option value="name-asc">Name (A-Z)</option>
                     <option value="price-asc">Price (Low-High)</option>

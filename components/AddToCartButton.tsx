@@ -13,12 +13,14 @@ type AddToCartButtonProps = {
     category?: string;
   };
   className?: string;
+  disabled?: boolean;
 };
 
-export default function AddToCartButton({ product, className }: AddToCartButtonProps) {
+export default function AddToCartButton({ product, className, disabled = false }: AddToCartButtonProps) {
   const [added, setAdded] = useState(false);
 
   const onAdd = () => {
+    if (disabled) return;
     addToCart(product, 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
@@ -27,7 +29,8 @@ export default function AddToCartButton({ product, className }: AddToCartButtonP
   return (
     <button
       onClick={onAdd}
-      className={className ?? 'inline-flex items-center justify-center gap-3 rounded-xl bg-pink-600 px-6 py-4 text-white font-bold hover:bg-pink-700 transition-colors'}
+      disabled={disabled}
+      className={className ?? 'inline-flex items-center justify-center gap-3 rounded-xl bg-orange-500 px-6 py-4 text-white font-bold hover:bg-orange-600 transition-colors'}
       type="button"
     >
       <FiShoppingCart className="text-lg" />

@@ -91,7 +91,7 @@ export default function AdminSettingsPage() {
         <div className="fixed right-4 top-4 z-50">
           <div
             className={`rounded-lg px-4 py-3 text-sm font-semibold shadow-lg ${
-              toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-pink-600 text-white'
+              toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-orange-500 text-white'
             }`}
           >
             {toast.message}
@@ -162,7 +162,7 @@ export default function AdminSettingsPage() {
           type="button"
           onClick={() => void saveSettings()}
           disabled={loading || saving || !hasChanges}
-          className="mt-6 rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700 disabled:opacity-50"
+          className="mt-6 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save Settings'}
         </button>

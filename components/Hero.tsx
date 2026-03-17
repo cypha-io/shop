@@ -5,7 +5,7 @@ import { FiArrowRight } from 'react-icons/fi';
 
 export default function Hero() {
   return (
-    <section className="relative bg-gradient-to-br from-pink-600 via-pink-500 to-white text-white py-20 px-6 overflow-hidden">
+    <section className="relative bg-gradient-to-br from-orange-500 via-orange-400 to-white text-white py-20 px-6 overflow-hidden">
       <div className="absolute inset-0 bg-black opacity-10"></div>
       
       <div className="max-w-7xl mx-auto relative z-10">
@@ -23,14 +23,14 @@ export default function Hero() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
             <Link 
               href="/menu" 
-              className="bg-white text-pink-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-pink-100 hover:text-pink-700 transition-all shadow-lg flex items-center justify-center gap-2"
+              className="bg-white text-orange-500 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 hover:text-orange-600 transition-all shadow-lg flex items-center justify-center gap-2"
             >
               Order Now
               <FiArrowRight className="text-xl" />
             </Link>
             <Link 
               href="/menu" 
-              className="bg-pink-100 text-pink-700 px-8 py-4 rounded-full font-bold text-lg hover:bg-pink-200 transition-all shadow-lg"
+              className="bg-orange-50 text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-100 transition-all shadow-lg"
             >
               View Menu
             </Link>
@@ -39,7 +39,7 @@ export default function Hero() {
       </div>
       
       {/* Decorative elements */}
-      <div className="absolute top-10 right-10 w-32 h-32 bg-pink-300 rounded-full opacity-20 blur-3xl"></div>
+      <div className="absolute top-10 right-10 w-32 h-32 bg-orange-200 rounded-full opacity-20 blur-3xl"></div>
       <div className="absolute bottom-10 left-10 w-40 h-40 bg-white rounded-full opacity-10 blur-3xl"></div>
     </section>
   );
