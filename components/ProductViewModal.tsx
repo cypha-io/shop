@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { FiShoppingCart } from 'react-icons/fi';
+import { addToCart } from '@/hooks/useCart';
 
 export interface ProductViewItem {
   id: number | string;
   name: string;
   price: string;
+  regularPrice?: string | null;
+  salePrice?: string | null;
   image?: string;
   category?: string;
   description?: string;
@@ -29,22 +32,24 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
 
   const isOpen = Boolean(product);
 
+  const formatCedi = (value: string) => {
+    const normalized = value.trim();
+    if (!normalized) return 'GH₵0';
+    if (normalized.includes('₵') || normalized.toUpperCase().startsWith('GH')) return normalized;
+    return `GH₵${normalized}`;
+  };
+
   const parsePrice = (price: string) => Number(price.replace(/[^0-9.]/g, ''));
-  const baseTotal = product ? parsePrice(product.price) * quantity : 0;
+  const normalizedRegularPrice = product?.regularPrice?.trim() || '';
+  const normalizedSalePrice = product?.salePrice?.trim() || '';
+  const hasSale = normalizedSalePrice.length > 0;
+  const effectivePriceLabel = formatCedi(hasSale ? normalizedSalePrice : normalizedRegularPrice || product?.price || '0');
+  const showStruckRegular = hasSale && normalizedRegularPrice.length > 0 && normalizedRegularPrice !== normalizedSalePrice;
+  const regularPriceLabel = formatCedi(normalizedRegularPrice);
+
+  const baseTotal = product ? parsePrice(effectivePriceLabel) * quantity : 0;
   const discountAmount = baseTotal * discountRate;
   const total = baseTotal - discountAmount;
-
-  useEffect(() => {
-    if (product) {
-      setQuantity(1);
-      setPromoCode('');
-      setAppliedPromo(null);
-      setDiscountRate(0);
-      setPromoError('');
-      setTouchStartY(null);
-      setTouchDelta(0);
-    }
-  }, [product]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -112,6 +117,25 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
     }
   };
 
+  const handleAddToCart = () => {
+    if (!product) return;
+    const image = product.image && (product.image.startsWith('http') || product.image.startsWith('data:'))
+      ? product.image
+      : '/logo.png';
+
+    addToCart(
+      {
+        id: Number(product.id),
+        name: product.name,
+        price: effectivePriceLabel,
+        image,
+        category: product.category,
+      },
+      quantity
+    );
+    onClose();
+  };
+
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     setTouchStartY(event.touches[0]?.clientY ?? null);
   };
@@ -148,6 +172,7 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
       />
       <div className="absolute inset-x-0 bottom-0 flex justify-center">
         <div
+          key={product ? String(product.id) : 'closed'}
           className={`w-full max-w-2xl bg-white rounded-t-3xl shadow-2xl ${
             touchStartY === null ? 'transition-transform duration-300' : ''
           }`}
@@ -197,7 +222,8 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <p className="text-xs text-gray-500 font-semibold">Price</p>
-                <div className="text-lg font-black text-red-600">{product?.price}</div>
+                <div className="text-lg font-black text-orange-500">{effectivePriceLabel}</div>
+                {showStruckRegular && <div className="text-xs font-semibold text-gray-400 line-through">{regularPriceLabel}</div>}
               </div>
               <div className="flex items-center gap-3">
                 <button
@@ -217,8 +243,10 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
                 </button>
               </div>
               <button
-                className="w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center transition-colors"
+                className="w-12 h-12 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center transition-colors"
                 aria-label="Add to cart"
+                onClick={handleAddToCart}
+                type="button"
               >
                 <FiShoppingCart className="text-lg" />
               </button>
@@ -244,17 +272,17 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
                     }
                   }}
                   placeholder="Enter code (e.g. PIZZA10)"
-                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 focus:outline-none focus:border-red-600"
+                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 focus:outline-none focus:border-orange-500"
                 />
                 <button
                   onClick={handleApplyPromo}
-                  className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors"
+                  className="px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors"
                 >
                   Apply
                 </button>
               </div>
               {promoError && (
-                <p className="mt-2 text-xs font-semibold text-red-600">{promoError}</p>
+                <p className="mt-2 text-xs font-semibold text-orange-500">{promoError}</p>
               )}
               <div className="mt-3 flex items-center justify-between text-sm">
                 <span className="text-gray-600">Discount</span>
@@ -262,7 +290,7 @@ export default function ProductViewModal({ product, onClose }: ProductViewModalP
               </div>
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-gray-600">Total</span>
-                <span className="font-black text-red-600">GH₵{total.toFixed(2)}</span>
+                <span className="font-black text-orange-500">GH₵{total.toFixed(2)}</span>
               </div>
             </div>
           </div>

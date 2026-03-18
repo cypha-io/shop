@@ -1,33 +1,32 @@
 'use client';
 
-import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FiTrash2, FiPlus, FiMinus } from 'react-icons/fi';
+import { useCart } from '@/hooks/useCart';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState([
-    { id: 1, name: 'Pepperoni Pizza', price: 45, quantity: 2, image: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=80' },
-    { id: 2, name: 'Fried Chicken', price: 35, quantity: 1, image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&q=80' },
-    { id: 3, name: 'French Fries', price: 15, quantity: 3, image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&q=80' },
-  ]);
+  const { items: cartItems, updateCartItemQuantity, removeCartItem } = useCart();
+
+  const parsePrice = (value: string) => {
+    const numeric = Number(String(value).replace(/[^0-9.]/g, ''));
+    return Number.isFinite(numeric) ? numeric : 0;
+  };
 
   const updateQuantity = (id: number, delta: number) => {
-    setCartItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-      )
-    );
+    const item = cartItems.find(cartItem => cartItem.id === id);
+    if (!item) return;
+    updateCartItemQuantity(id, Math.max(1, item.quantity + delta));
   };
 
   const removeItem = (id: number) => {
-    setCartItems(items => items.filter(item => item.id !== id));
+    removeCartItem(id);
   };
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const delivery = 10;
+  const subtotal = cartItems.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
+  const delivery = cartItems.length > 0 ? 10 : 0;
   const total = subtotal + delivery;
 
   return (
@@ -49,7 +48,7 @@ export default function CartPage() {
                   
                   <div className="flex-1">
                     <h3 className="font-black text-lg text-gray-800">{item.name}</h3>
-                    <p className="text-red-600 font-bold">GH₵{item.price}</p>
+                    <p className="text-orange-500 font-bold">{item.price}</p>
                   </div>
 
                   <div className="flex items-center justify-between sm:justify-start gap-3">
@@ -62,13 +61,13 @@ export default function CartPage() {
                         <FiPlus className="text-gray-600" />
                       </button>
                     </div>
-                    <button onClick={() => removeItem(item.id)} className="w-10 h-10 bg-red-50 hover:bg-red-100 rounded-full flex items-center justify-center sm:hidden">
-                      <FiTrash2 className="text-red-600" />
+                    <button onClick={() => removeItem(item.id)} className="w-10 h-10 bg-orange-50 hover:bg-orange-50 rounded-full flex items-center justify-center sm:hidden">
+                      <FiTrash2 className="text-orange-500" />
                     </button>
                   </div>
 
-                  <button onClick={() => removeItem(item.id)} className="hidden sm:flex w-10 h-10 bg-red-50 hover:bg-red-100 rounded-full items-center justify-center">
-                    <FiTrash2 className="text-red-600" />
+                  <button onClick={() => removeItem(item.id)} className="hidden sm:flex w-10 h-10 bg-orange-50 hover:bg-orange-50 rounded-full items-center justify-center">
+                    <FiTrash2 className="text-orange-500" />
                   </button>
                 </div>
               ))}
@@ -81,27 +80,30 @@ export default function CartPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-bold">GH₵{subtotal}</span>
+                  <span className="font-bold">GH₵{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Delivery</span>
-                  <span className="font-bold">GH₵{delivery}</span>
+                  <span className="font-bold">GH₵{delivery.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-3 flex justify-between">
                   <span className="font-black text-lg">Total</span>
-                  <span className="font-black text-xl text-red-600">GH₵{total}</span>
+                  <span className="font-black text-xl text-orange-500">GH₵{total.toFixed(2)}</span>
                 </div>
               </div>
 
-              <button className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white py-3.5 sm:py-4 rounded-xl font-black text-base sm:text-lg hover:from-red-500 hover:to-red-400 transition-all">
+              <Link
+                href="/checkout"
+                className="block w-full text-center bg-gradient-to-r from-orange-500 to-orange-400 text-white py-3.5 sm:py-4 rounded-xl font-black text-base sm:text-lg hover:from-orange-400 hover:to-orange-300 transition-all"
+              >
                 Proceed to Checkout
-              </button>
+              </Link>
             </div>
           </div>
         ) : (
           <div className="text-center py-20">
             <p className="text-2xl text-gray-500 mb-6">Your cart is empty</p>
-            <Link href="/" className="inline-block bg-red-600 text-white px-8 py-3 rounded-full font-bold hover:bg-red-700">
+            <Link href="/products" className="inline-block bg-orange-500 text-white px-8 py-3 rounded-full font-bold hover:bg-orange-600">
               Start Shopping
             </Link>
           </div>

@@ -1,254 +1,198 @@
 'use client';
 
-import React, { useState } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
-import { FiShoppingCart, FiTrendingUp, FiClock, FiAlertCircle, FiBell, FiToggleRight, FiAward, FiPrinter, FiX, FiUsers } from 'react-icons/fi';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { FiDollarSign, FiPackage, FiShoppingBag, FiClock } from 'react-icons/fi';
 
-interface Order {
-  id: string;
-  customer: string;
-  items: number;
+type OrderItem = {
+  id: number;
+  productName: string;
+  quantity: number;
+  lineTotal: number;
+};
+
+type Order = {
+  id: number;
+  orderNumber: string;
+  customerName: string;
+  status: 'Pending' | 'Delivered' | 'Cancelled';
   total: number;
-  status: 'new' | 'preparing' | 'ready' | 'dispatched';
-  time: string;
-}
+  createdAt: string;
+  items: OrderItem[];
+};
 
-export default function DashboardPage() {
-  const [pauseOrdering, setPauseOrdering] = useState(false);
-  const [markBusy, setMarkBusy] = useState(false);
-  const [showBannerModal, setShowBannerModal] = useState(false);
-  const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
+type Product = { id: number };
 
-  const alerts = [
-    { id: '1', type: 'stock', message: 'Low stock: Mozzarella Cheese (5kg left)', severity: 'critical' },
-    { id: '2', type: 'payment', message: 'Payment failed for order #1002 - Retry needed', severity: 'error' },
-    { id: '3', type: 'delivery', message: '2 deliveries delayed by 15+ minutes', severity: 'warning' },
-    { id: '4', type: 'cancellation', message: 'High cancellation rate (12%) - Garlic Bread', severity: 'warning' },
-  ];
+export default function AdminDashboardPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const kpis = [
-    { label: 'Today\'s Orders', value: '156', change: '+12%', icon: FiShoppingCart, color: 'from-blue-500 to-cyan-500' },
-    { label: 'Today\'s Revenue', value: '₵42,340', change: '+18%', icon: FiTrendingUp, color: 'from-green-500 to-emerald-500' },
-    { label: 'Avg Prep Time', value: '12 mins', change: '-2 mins', icon: FiClock, color: 'from-orange-500 to-red-500' },
-    { label: 'Active Customers', value: '248', change: '+8%', icon: FiUsers, color: 'from-purple-500 to-pink-500' },
-  ];
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [ordersRes, productsRes] = await Promise.all([
+          fetch('/api/orders'),
+          fetch('/api/products'),
+        ]);
 
-  const statusColors = {
-    new: 'bg-blue-100 text-blue-800 border-blue-300',
-    preparing: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    ready: 'bg-green-100 text-green-800 border-green-300',
-    dispatched: 'bg-purple-100 text-purple-800 border-purple-300',
-  };
+        if (!ordersRes.ok || !productsRes.ok) {
+          throw new Error('Failed to load dashboard data');
+        }
 
-  const filteredAlerts = alerts.filter(a => !dismissedAlerts.includes(a.id));
+        const ordersData = (await ordersRes.json()) as Order[];
+        const productsData = (await productsRes.json()) as Product[];
 
-  const liveOrders: Order[] = [
-    { id: '#1005', customer: 'Kwesi Boateng', items: 2, total: 54.90, status: 'new', time: '2 mins ago' },
-    { id: '#1004', customer: 'Abena Osei', items: 3, total: 89.90, status: 'preparing', time: '8 mins ago' },
-    { id: '#1003', customer: 'Yaw Mensah', items: 1, total: 39.90, status: 'ready', time: '12 mins ago' },
-    { id: '#1002', customer: 'Nadia Sarfo', items: 4, total: 124.90, status: 'dispatched', time: '25 mins ago' },
-  ];
+        setOrders(ordersData);
+        setProducts(productsData);
+        setError('');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, []);
+
+  const totalRevenue = useMemo(
+    () => orders.filter(o => o.status !== 'Cancelled').reduce((sum, order) => sum + Number(order.total || 0), 0),
+    [orders]
+  );
+
+  const totalOrders = orders.length;
+  const pendingOrders = orders.filter(order => order.status === 'Pending').length;
+
+  const recentOrders = orders.slice(0, 8);
 
   return (
-    <AdminLayout>
-      <div className="space-y-8 pb-8">
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {kpis.map((kpi, idx) => {
-            const Icon = kpi.icon;
-            return (
-              <div
-                key={idx}
-                className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-gray-600 font-medium text-sm">{kpi.label}</h3>
-                  <div className={`p-3 rounded-lg bg-gradient-to-br ${kpi.color} text-white shadow-md`}>
-                    <Icon size={24} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-gray-900">{kpi.value}</p>
-                  <p className={`text-sm font-semibold ${kpi.change.startsWith('+') || kpi.change.startsWith('-') && kpi.change.includes('min') ? 'text-green-600' : 'text-blue-600'}`}>
-                    {kpi.change} from yesterday
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+    <section className="mx-auto w-full max-w-7xl">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-black text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-600 mt-2">Monitor sales, orders, and catalog performance.</p>
+          </div>
+          <Link href="/admin/orders" className="px-4 py-2 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600">
+            View Full Orders
+          </Link>
         </div>
 
-        {/* Quick Actions & Alerts */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Quick Actions */}
-          <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900 mb-6">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
-                onClick={() => setPauseOrdering(!pauseOrdering)}
-                className={`flex items-center gap-4 px-6 py-4 rounded-lg transition-all duration-200 font-medium ${
-                  pauseOrdering
-                    ? 'bg-red-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:shadow-md'
-                }`}
-              >
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <FiToggleRight size={20} />
-                </div>
-                <span>Pause Ordering</span>
-                <div className={`ml-auto w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                  pauseOrdering ? 'bg-white border-white' : 'border-current'
-                }`}>
-                  {pauseOrdering && <div className="w-2 h-2 rounded-full bg-red-600"></div>}
-                </div>
-              </button>
-              <button
-                onClick={() => setMarkBusy(!markBusy)}
-                className={`flex items-center gap-4 px-6 py-4 rounded-lg transition-all duration-200 font-medium ${
-                  markBusy
-                    ? 'bg-yellow-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:shadow-md'
-                }`}
-              >
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <FiBell size={20} />
-                </div>
-                <span>Mark Store Busy</span>
-                <div className={`ml-auto w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                  markBusy ? 'bg-white border-white' : 'border-current'
-                }`}>
-                  {markBusy && <div className="w-2 h-2 rounded-full bg-yellow-600"></div>}
-                </div>
-              </button>
-              <button
-                onClick={() => setShowBannerModal(true)}
-                className="flex items-center gap-4 px-6 py-4 rounded-lg transition-all duration-200 font-medium bg-gray-100 text-gray-700 border border-gray-300 hover:shadow-md"
-              >
-                <div className="p-2 rounded-lg">
-                  <FiAward size={20} className="text-purple-600" />
-                </div>
-                <span>Create Banner</span>
-              </button>
-              <button className="flex items-center gap-4 px-6 py-4 rounded-lg transition-all duration-200 font-medium bg-gray-100 text-gray-700 border border-gray-300 hover:shadow-md">
-                <div className="p-2 rounded-lg">
-                  <FiPrinter size={20} className="text-blue-600" />
-                </div>
-                <span>Print Tickets</span>
-              </button>
+        {error && (
+          <div className="mb-6 rounded-xl border border-orange-100 bg-orange-50 p-4">
+            <p className="text-sm font-semibold text-orange-600">{error}</p>
+          </div>
+        )}
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-500">Revenue</p>
+                <p className="text-2xl font-black text-gray-900">GH₵{totalRevenue.toFixed(2)}</p>
+              </div>
+              <div className="w-11 h-11 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                <FiDollarSign />
+              </div>
             </div>
           </div>
 
-          {/* Alerts */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 max-h-72 overflow-y-auto">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">System Alerts</h2>
-            <div className="space-y-3">
-              {filteredAlerts.length > 0 ? (
-                filteredAlerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="p-4 rounded-lg border-l-4 border-yellow-400 bg-yellow-50 hover:shadow-sm transition-all duration-200 group"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-lg">⚠️</span>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-900 text-sm">{alert.message}</p>
-                        <p className="text-xs text-gray-600 mt-1">Severity: <span className={`font-semibold ${alert.severity === 'critical' ? 'text-red-600' : alert.severity === 'error' ? 'text-orange-600' : 'text-yellow-600'}`}>{alert.severity}</span></p>
-                      </div>
-                      <button
-                        onClick={() => setDismissedAlerts([...dismissedAlerts, alert.id])}
-                        className="p-1 rounded hover:bg-yellow-200 transition-colors opacity-0 group-hover:opacity-100"
-                      >
-                        <FiX size={16} className="text-gray-500" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-sm text-center py-8">All systems operational ✓</p>
-              )}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-500">Total Orders</p>
+                <p className="text-2xl font-black text-gray-900">{totalOrders}</p>
+              </div>
+              <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <FiShoppingBag />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-500">Pending</p>
+                <p className="text-2xl font-black text-gray-900">{pendingOrders}</p>
+              </div>
+              <div className="w-11 h-11 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center">
+                <FiClock />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-500">Products</p>
+                <p className="text-2xl font-black text-gray-900">{products.length}</p>
+              </div>
+              <div className="w-11 h-11 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
+                <FiPackage />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Live Order Feed */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-gray-900">Live Order Feed</h2>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
-              <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
-              Live
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h2 className="text-xl font-black text-gray-900">Recent Orders</h2>
+          </div>
+
+          {loading ? (
+            <div className="px-5 py-10 text-gray-600">Loading dashboard...</div>
+          ) : recentOrders.length === 0 ? (
+            <div className="px-5 py-10 text-gray-600">No orders yet.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px]">
+                <thead>
+                  <tr className="text-left text-sm text-gray-500">
+                    <th className="px-5 py-3">Order</th>
+                    <th className="px-5 py-3">Customer</th>
+                    <th className="px-5 py-3">Date</th>
+                    <th className="px-5 py-3">Status</th>
+                    <th className="px-5 py-3">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentOrders.map(order => (
+                    <tr key={order.id} className="border-t border-gray-100 text-sm">
+                      <td className="px-5 py-3 font-bold text-gray-900">{order.orderNumber}</td>
+                      <td className="px-5 py-3 text-gray-700">{order.customerName}</td>
+                      <td className="px-5 py-3 text-gray-700">{new Date(order.createdAt).toLocaleDateString()}</td>
+                      <td className="px-5 py-3">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                          order.status === 'Delivered'
+                            ? 'bg-green-100 text-green-700'
+                            : order.status === 'Cancelled'
+                              ? 'bg-orange-50 text-orange-600'
+                              : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 font-bold text-orange-500">GH₵{Number(order.total).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
-          <div className="space-y-3">
-            {liveOrders.map((order) => (
-              <div
-                key={order.id}
-                className="p-4 rounded-lg border border-gray-200 hover:shadow-md hover:border-red-200 transition-all duration-200 hover:bg-red-50/30 group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="font-bold text-gray-900">{order.id}</span>
-                      <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${statusColors[order.status]}`}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                      </span>
-                      <span className="text-xs text-gray-500 ml-auto">{order.time}</span>
-                    </div>
-                    <p className="text-sm font-medium text-gray-900">{order.customer}</p>
-                    <p className="text-sm text-gray-600 mt-1">{order.items} items</p>
-                  </div>
-                  <div className="text-right ml-4 flex flex-col items-end gap-2">
-                    <p className="font-bold text-red-600 text-lg">₵{order.total}</p>
-                    <button className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 hover:shadow-md transition-all duration-200 opacity-0 group-hover:opacity-100">
-                      View
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          )}
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/admin/products" className="px-4 py-2 rounded-xl bg-gray-900 text-white font-bold hover:bg-black">
+            Manage Catalog
+          </Link>
+          <Link href="/admin/orders" className="px-4 py-2 rounded-xl bg-gray-100 text-gray-800 font-bold hover:bg-gray-200">
+            Manage Orders
+          </Link>
         </div>
       </div>
-
-      {/* Banner Modal */}
-      {showBannerModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Create Banner</h2>
-              <button
-                onClick={() => setShowBannerModal(false)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <FiX size={20} className="text-gray-600" />
-              </button>
-            </div>
-            <div className="space-y-4 mb-6">
-              <input
-                type="text"
-                placeholder="Banner Title"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-              />
-              <textarea
-                placeholder="Banner Message"
-                rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none"
-              ></textarea>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowBannerModal(false)}
-                className="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-all"
-              >
-                Cancel
-              </button>
-              <button className="flex-1 px-4 py-3 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 hover:shadow-md transition-all duration-200">
-                Create
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </AdminLayout>
+    </section>
   );
 }

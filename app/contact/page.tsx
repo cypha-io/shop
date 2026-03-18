@@ -21,20 +21,20 @@ export default function ContactPage() {
             <form className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Name</label>
-                <input type="text" className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-red-600 focus:outline-none" />
+                <input type="text" className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:outline-none" />
               </div>
               
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
-                <input type="email" className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-red-600 focus:outline-none" />
+                <input type="email" className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:outline-none" />
               </div>
               
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Message</label>
-                <textarea rows={5} className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-red-600 focus:outline-none"></textarea>
+                <textarea rows={5} className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:outline-none"></textarea>
               </div>
               
-              <button className="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700">
+              <button className="w-full bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600">
                 Send Message
               </button>
             </form>
@@ -44,7 +44,7 @@ export default function ContactPage() {
           <div className="space-y-6">
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <FiPhone className="text-xl text-white" />
                 </div>
                 <div>
@@ -57,12 +57,12 @@ export default function ContactPage() {
 
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <FiMail className="text-xl text-white" />
                 </div>
                 <div>
                   <h3 className="font-black text-lg text-gray-800 mb-1">Email</h3>
-                  <p className="text-gray-600">info@pizzacity.com</p>
+                  <p className="text-gray-600">info@wigfactory.com</p>
                   <p className="text-sm text-gray-500 mt-1">We&apos;ll respond within 24 hours</p>
                 </div>
               </div>
@@ -70,7 +70,7 @@ export default function ContactPage() {
 
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <FiMapPin className="text-xl text-white" />
                 </div>
                 <div>

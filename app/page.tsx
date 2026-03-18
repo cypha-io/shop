@@ -1,8 +1,15 @@
+import type { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import Categories from '@/components/Categories';
 import AdSection from '@/components/AdSection';
 import PopularItems from '@/components/PopularItems';
+import NewArrivals from '@/components/NewArrivals';
+import Featured from '@/components/Featured';
 import Footer from '@/components/Footer';
+
+export const metadata: Metadata = {
+  title: 'Premium Wigs & Hair',
+};
 
 export default function Home() {
   return (
@@ -11,6 +18,8 @@ export default function Home() {
       <Categories />
       <AdSection />
       <PopularItems />
+      <NewArrivals />
+      <Featured />
       <Footer />
     </div>
   );

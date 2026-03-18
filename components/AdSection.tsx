@@ -2,31 +2,78 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { FiPlay } from 'react-icons/fi';
+
+type SliderProduct = {
+  image?: string;
+  imageUrls?: string[] | null;
+};
+
+const FALLBACK_SLIDES = [
+  '/logo.png',
+];
 
 export default function AdSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  const slides = [
-    { 
-      type: 'image', 
-      url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80'
-    },
-    { 
-      type: 'image', 
-      url: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&q=80'
-    },
-    { 
-      type: 'image', 
-      url: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=800&q=80'
-    },
-    { 
-      type: 'video', 
-      url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80'
-    },
-  ];
+  const [slides, setSlides] = useState<string[]>(FALLBACK_SLIDES);
 
   useEffect(() => {
+    let isMounted = true;
+
+    const loadSlides = async () => {
+      try {
+        const response = await fetch('/api/products?limit=30', { cache: 'no-store' });
+        if (!response.ok) {
+          return;
+        }
+
+        const products = (await response.json()) as SliderProduct[];
+        const cloudinaryUrls: string[] = [];
+
+        for (const product of products) {
+          const urls: string[] = [];
+
+          if (Array.isArray(product.imageUrls)) {
+            urls.push(...product.imageUrls);
+          }
+
+          if (product.image) {
+            urls.push(product.image);
+          }
+
+          for (const rawUrl of urls) {
+            const url = rawUrl?.trim();
+            if (!url) continue;
+
+            if (url.includes('res.cloudinary.com')) {
+              if (!cloudinaryUrls.includes(url)) {
+                cloudinaryUrls.push(url);
+              }
+            }
+          }
+        }
+
+        const nextSlides = cloudinaryUrls.slice(0, 6);
+        if (isMounted && nextSlides.length > 0) {
+          setSlides(nextSlides);
+          setCurrentSlide(0);
+        }
+      } catch {
+        // Keep fallback slide if API fetch fails.
+      }
+    };
+
+    void loadSlides();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (slides.length <= 1) {
+      return;
+    }
+
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 3000);
@@ -39,7 +86,7 @@ export default function AdSection() {
       <div className="relative overflow-hidden rounded-xl md:rounded-2xl shadow-xl h-[200px] md:h-[450px]">
         {slides.map((slide, index) => (
           <div
-            key={index}
+            key={`${slide}-${index}`}
             className={`absolute inset-0 transition-all duration-700 ease-in-out ${
               index === currentSlide
                 ? 'opacity-100 translate-x-0'
@@ -50,21 +97,13 @@ export default function AdSection() {
           >
             <div className="relative w-full h-full">
               <Image
-                src={slide.url}
+                src={slide}
                 alt={`Slide ${index + 1}`}
                 fill
                 className="object-cover"
                 priority={index === 0}
               />
               <div className="absolute inset-0 bg-black/30"></div>
-              
-              {slide.type === 'video' && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors cursor-pointer">
-                    <FiPlay className="text-4xl text-white ml-1" />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         ))}
