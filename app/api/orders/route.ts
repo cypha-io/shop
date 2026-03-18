@@ -142,6 +142,7 @@ export async function POST(request: Request) {
 
   try {
     const body = (await request.json()) as CheckoutPayload;
+    const provisionalOrderNumber = `TMP-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
 
     if (!body.fullName?.trim() || !body.phone?.trim() || !body.address?.trim() || !body.city?.trim()) {
       return Response.json({ error: 'Missing required customer details' }, { status: 400 });
@@ -156,20 +157,54 @@ export async function POST(request: Request) {
     }
 
     client = await pool.connect();
+
+    const paymentCompletedColumnResult = await client.query(
+      `
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'Order'
+          AND column_name = 'paymentCompleted'
+      ) AS "hasPaymentCompleted"
+      `
+    );
+    const hasPaymentCompleted = Boolean(paymentCompletedColumnResult.rows[0]?.hasPaymentCompleted);
+
     await client.query('BEGIN');
 
     const paymentCompleted = body.paymentMethod === 'card' || body.paymentMethod === 'mobile-money';
+    const submittedProductIds = Array.from(
+      new Set(
+        body.items
+          .map(item => Number(item.id))
+          .filter(id => Number.isInteger(id) && id > 0)
+      )
+    );
+
+    const validProductIds = new Set<number>();
+    if (submittedProductIds.length > 0) {
+      const productIdResult = await client.query(
+        'SELECT id FROM "Product" WHERE id = ANY($1::int[])',
+        [submittedProductIds]
+      );
+
+      for (const row of productIdResult.rows as Array<{ id: number }>) {
+        validProductIds.add(row.id);
+      }
+    }
 
     let orderInsert;
-    try {
+    if (hasPaymentCompleted) {
       orderInsert = await client.query(
         `
         INSERT INTO "Order"
-        ("customerName", phone, email, address, city, notes, "paymentMethod", "paymentCompleted", status, subtotal, delivery, total)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Pending', $9, $10, $11)
+        ("orderNumber", "customerName", phone, email, address, city, notes, "paymentMethod", "paymentCompleted", status, subtotal, delivery, total)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Pending', $10, $11, $12)
         RETURNING id
         `,
         [
+          provisionalOrderNumber,
           body.fullName.trim(),
           body.phone.trim(),
           body.email?.trim() || null,
@@ -183,19 +218,16 @@ export async function POST(request: Request) {
           body.total,
         ]
       );
-    } catch (error) {
-      if ((error as { code?: string }).code !== '42703') {
-        throw error;
-      }
-
+    } else {
       orderInsert = await client.query(
         `
         INSERT INTO "Order"
-        ("customerName", phone, email, address, city, notes, "paymentMethod", status, subtotal, delivery, total)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, 'Pending', $8, $9, $10)
+        ("orderNumber", "customerName", phone, email, address, city, notes, "paymentMethod", status, subtotal, delivery, total)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Pending', $9, $10, $11)
         RETURNING id
         `,
         [
+          provisionalOrderNumber,
           body.fullName.trim(),
           body.phone.trim(),
           body.email?.trim() || null,
@@ -219,6 +251,8 @@ export async function POST(request: Request) {
       const unitPrice = parsePrice(item.price);
       const quantity = Math.max(1, Number(item.quantity) || 1);
       const lineTotal = unitPrice * quantity;
+      const submittedProductId = Number(item.id);
+      const productId = validProductIds.has(submittedProductId) ? submittedProductId : null;
 
       await client.query(
         `
@@ -226,7 +260,7 @@ export async function POST(request: Request) {
         ("orderId", "productId", "productName", price, quantity, "lineTotal")
         VALUES ($1, $2, $3, $4, $5, $6)
         `,
-        [orderId, Number(item.id) || null, item.name, unitPrice, quantity, lineTotal]
+        [orderId, productId, item.name, unitPrice, quantity, lineTotal]
       );
     }
 

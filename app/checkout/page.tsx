@@ -87,8 +87,8 @@ export default function CheckoutPage() {
       });
 
       if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload.error || 'Failed to place order');
+        const payload = (await response.json().catch(() => ({}))) as { error?: string; details?: string };
+        throw new Error(payload.details || payload.error || 'Failed to place order');
       }
 
       const payload = (await response.json()) as { orderNumber?: string };
