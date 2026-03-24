@@ -1,196 +1,296 @@
 'use client';
 
-import React, { useState } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
-import { FiPlus, FiEdit2, FiTrash2, FiX } from 'react-icons/fi';
+import { useEffect, useMemo, useState } from 'react';
+import { FiPlus, FiTrash2 } from 'react-icons/fi';
 
-interface PromoCode {
-  id: string;
+type Promotion = {
+  id: number;
   code: string;
-  discount: string;
   type: 'percentage' | 'fixed';
-  expiry: string;
-  usage: { used: number; limit: number };
-  status: 'active' | 'expired' | 'paused';
-}
-
-interface Deal {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
+  value: number;
+  minOrder: number;
   active: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+  usageCount: number;
+  maxUsage: number | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type PromotionForm = {
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: string;
+  minOrder: string;
+  active: boolean;
+  startsAt: string;
+  endsAt: string;
+  maxUsage: string;
+};
+
+const INITIAL_FORM: PromotionForm = {
+  code: '',
+  type: 'percentage',
+  value: '',
+  minOrder: '0',
+  active: true,
+  startsAt: '',
+  endsAt: '',
+  maxUsage: '',
+};
+
+function toDateTimeLocal(value: string | null): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const h = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  return `${y}-${m}-${d}T${h}:${min}`;
 }
 
-interface Banner {
-  id: number;
-  title: string;
-  message: string;
-  status: 'active' | 'scheduled' | 'expired';
-}
+export default function AdminPromotionsPage() {
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [form, setForm] = useState<PromotionForm>(INITIAL_FORM);
 
-export default function PromotionsPage() {
-  const [activeTab, setActiveTab] = useState('codes');
-  const [showModal, setShowModal] = useState(false);
+  const activeCount = useMemo(() => promotions.filter(p => p.active).length, [promotions]);
 
-  const [promoCodes] = useState<PromoCode[]>([
-    { id: '1', code: 'SAVE50', discount: '50%', type: 'percentage', expiry: '2024-02-28', usage: { used: 342, limit: 500 }, status: 'active' },
-    { id: '2', code: 'FREE100', discount: '₵10', type: 'fixed', expiry: '2024-03-15', usage: { used: 156, limit: 1000 }, status: 'active' },
-  ]);
+  const loadPromotions = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/promotions', { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = (await response.json()) as Promotion[];
+      setPromotions(data);
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load promotions');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const [deals] = useState<Deal[]>([
-    { id: 1, name: 'Weekend Special', description: 'Buy 2 get 1 free on pizzas', price: 89.90, active: true },
-    { id: 2, name: 'Family Pack', description: '4 pizzas + 4 drinks', price: 199.90, active: true },
-  ]);
+  useEffect(() => {
+    void loadPromotions();
+  }, []);
 
-  const [banners] = useState<Banner[]>([
-    { id: 1, title: 'Valentine Special', message: 'Love is in the air! Get 30% off on couple combos', status: 'active' },
-    { id: 2, title: 'Summer Sale', message: 'Beat the heat with refreshing drinks. 50% off!', status: 'scheduled' },
-  ]);
+  const createPromo = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!form.code.trim() || !form.value.trim()) return;
 
-  const statusColors = {
-    active: 'bg-green-100 text-green-800',
-    expired: 'bg-gray-100 text-gray-800',
-    paused: 'bg-yellow-100 text-yellow-800',
-    scheduled: 'bg-blue-100 text-blue-800',
+    try {
+      setSaving(true);
+      const response = await fetch('/api/admin/promotions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: form.code.trim().toUpperCase(),
+          type: form.type,
+          value: Number(form.value),
+          minOrder: Number(form.minOrder || 0),
+          active: form.active,
+          startsAt: form.startsAt ? new Date(form.startsAt).toISOString() : null,
+          endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : null,
+          maxUsage: form.maxUsage ? Number(form.maxUsage) : null,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to create promo');
+      }
+
+      setForm(INITIAL_FORM);
+      await loadPromotions();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create promo');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleActive = async (promo: Promotion) => {
+    try {
+      const response = await fetch(`/api/admin/promotions?id=${promo.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: !promo.active }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to update promo');
+      }
+
+      await loadPromotions();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update promo');
+    }
+  };
+
+  const deletePromo = async (promoId: number) => {
+    try {
+      const response = await fetch(`/api/admin/promotions?id=${promoId}`, { method: 'DELETE' });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to delete promo');
+      }
+
+      await loadPromotions();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete promo');
+    }
   };
 
   return (
-    <AdminLayout>
-      <div className="p-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Promotions & Marketing</h1>
-          <button onClick={() => setShowModal(true)} className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-600">
-            <FiPlus /> Add Promotion
-          </button>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Promotions</h1>
+          <p className="text-slate-600 mt-1">Create and manage promo codes used at checkout.</p>
         </div>
-
-        <div className="flex gap-0 border-b border-gray-200">
-          {[
-            { id: 'codes', label: 'Promo Codes' },
-            { id: 'deals', label: 'Deals & Combos' },
-            { id: 'banners', label: 'Banners' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 font-medium text-sm border-b-2 transition ${
-                activeTab === tab.id ? 'border-red-500 text-red-600' : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Active Codes</p>
+          <p className="text-2xl font-black text-slate-900">{activeCount}</p>
         </div>
-
-        {activeTab === 'codes' && (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900">Code</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900">Discount</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900">Expiry</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900">Usage</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {promoCodes.map(promo => (
-                  <tr key={promo.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-semibold text-gray-900">{promo.code}</td>
-                    <td className="px-6 py-4 text-sm font-semibold">{promo.discount}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{promo.expiry}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{promo.usage.used}/{promo.usage.limit}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[promo.status]}`}>
-                        {promo.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 flex gap-2">
-                      <button className="text-blue-500 hover:text-blue-700"><FiEdit2 /></button>
-                      <button className="text-red-500 hover:text-red-700"><FiTrash2 /></button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {activeTab === 'deals' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {deals.map(deal => (
-              <div key={deal.id} className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{deal.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{deal.description}</p>
-                  </div>
-                  <span className={`px-2 py-1 rounded text-xs font-semibold ${deal.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                    {deal.active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-2xl font-bold text-red-600">₵{deal.price}</p>
-                  <div className="flex gap-2">
-                    <button className="text-blue-500 hover:text-blue-700"><FiEdit2 /></button>
-                    <button className="text-red-500 hover:text-red-700"><FiTrash2 /></button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {activeTab === 'banners' && (
-          <div className="space-y-4">
-            {banners.map(banner => (
-              <div key={banner.id} className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{banner.title}</h3>
-                  <p className="text-sm text-gray-600 mt-2">{banner.message}</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[banner.status]}`}>
-                    {banner.status}
-                  </span>
-                  <div className="flex gap-2">
-                    <button className="text-blue-500 hover:text-blue-700"><FiEdit2 /></button>
-                    <button className="text-red-500 hover:text-red-700"><FiTrash2 /></button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Add Promotion</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
-                <FiX />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <input type="text" placeholder="Code/Title" className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
-              <textarea placeholder="Description" className="w-full px-4 py-2 border border-gray-300 rounded-lg h-20" />
-              <div className="flex gap-2">
-                <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                  Cancel
-                </button>
-                <button className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-                  Add
-                </button>
-              </div>
-            </div>
-          </div>
+      {error ? (
+        <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700">
+          {error}
         </div>
-      )}
-    </AdminLayout>
+      ) : null}
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
+          <FiPlus /> Add New Promo
+        </h2>
+        <form onSubmit={createPromo} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <input
+            value={form.code}
+            onChange={(e) => setForm(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+            placeholder="Code (e.g. SAVE20)"
+            className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+            required
+          />
+          <select
+            value={form.type}
+            onChange={(e) => setForm(prev => ({ ...prev, type: e.target.value as 'percentage' | 'fixed' }))}
+            className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+          >
+            <option value="percentage">Percentage</option>
+            <option value="fixed">Fixed Amount</option>
+          </select>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.value}
+            onChange={(e) => setForm(prev => ({ ...prev, value: e.target.value }))}
+            placeholder={form.type === 'percentage' ? 'Discount %' : 'Discount amount'}
+            className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+            required
+          />
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.minOrder}
+            onChange={(e) => setForm(prev => ({ ...prev, minOrder: e.target.value }))}
+            placeholder="Min order"
+            className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+          />
+          <input
+            type="datetime-local"
+            value={form.startsAt}
+            onChange={(e) => setForm(prev => ({ ...prev, startsAt: e.target.value }))}
+            className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+          />
+          <input
+            type="datetime-local"
+            value={form.endsAt}
+            onChange={(e) => setForm(prev => ({ ...prev, endsAt: e.target.value }))}
+            className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+          />
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={form.maxUsage}
+            onChange={(e) => setForm(prev => ({ ...prev, maxUsage: e.target.value }))}
+            placeholder="Max usage (optional)"
+            className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+          />
+          <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={form.active}
+              onChange={(e) => setForm(prev => ({ ...prev, active: e.target.checked }))}
+            />
+            Active
+          </label>
+          <button
+            type="submit"
+            disabled={saving}
+            className="sm:col-span-2 lg:col-span-4 rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-60"
+          >
+            {saving ? 'Saving...' : 'Create Promo'}
+          </button>
+        </form>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        <h2 className="text-lg font-black text-slate-900 mb-4">All Promo Codes</h2>
+        {loading ? (
+          <p className="text-slate-600">Loading promotions...</p>
+        ) : promotions.length === 0 ? (
+          <p className="text-slate-600">No promotions yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {promotions.map((promo) => (
+              <div key={promo.id} className="rounded-xl border border-slate-200 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-base font-black text-slate-900">{promo.code}</p>
+                    <p className="text-sm text-slate-600 mt-1">
+                      {promo.type === 'percentage' ? `${promo.value}% off` : `GH₵${promo.value.toFixed(2)} off`} • Min: GH₵{promo.minOrder.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {promo.startsAt ? `Starts: ${toDateTimeLocal(promo.startsAt)}` : 'Starts: immediately'} • {promo.endsAt ? `Ends: ${toDateTimeLocal(promo.endsAt)}` : 'No end date'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${promo.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {promo.active ? 'Active' : 'Inactive'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => toggleActive(promo)}
+                      className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                    >
+                      {promo.active ? 'Pause' : 'Activate'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deletePromo(promo.id)}
+                      className="inline-flex items-center gap-1 rounded-lg bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-600 hover:bg-orange-100"
+                    >
+                      <FiTrash2 /> Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }

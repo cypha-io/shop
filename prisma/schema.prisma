@@ -45,10 +45,15 @@ model Order {
   subtotal      Float
   delivery      Float
   total         Float
+  userProfileId Int?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
   items         OrderItem[]
+  user          UserProfile? @relation(fields: [userProfileId], references: [id], onDelete: SetNull)
+
+  @@index([userProfileId])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -81,6 +86,7 @@ model UserProfile {
 
   sessions   UserSession[]
   resets     PasswordReset[]
+  orders     Order[]
 }
 
 model UserSession {

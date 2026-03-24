@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-const CART_STORAGE_KEY = 'wig-factory-cart';
+const CART_STORAGE_KEY_PREFIX = 'wig-factory-cart';
+const USER_PHONE_KEY = 'wf-user-phone';
 const CART_EVENT = 'cart-updated';
 
 export type CartItem = {
@@ -20,10 +21,16 @@ function isBrowser() {
   return typeof window !== 'undefined';
 }
 
+function getCartStorageKey() {
+  if (!isBrowser()) return `${CART_STORAGE_KEY_PREFIX}:guest`;
+  const phone = window.localStorage.getItem(USER_PHONE_KEY)?.trim();
+  return phone ? `${CART_STORAGE_KEY_PREFIX}:${phone}` : `${CART_STORAGE_KEY_PREFIX}:guest`;
+}
+
 function readCart(): CartItem[] {
   if (!isBrowser()) return [];
   try {
-    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+    const raw = window.localStorage.getItem(getCartStorageKey());
     if (!raw) return [];
     const parsed = JSON.parse(raw) as CartItem[];
     if (!Array.isArray(parsed)) return [];
@@ -35,7 +42,7 @@ function readCart(): CartItem[] {
 
 function writeCart(items: CartItem[]) {
   if (!isBrowser()) return;
-  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  window.localStorage.setItem(getCartStorageKey(), JSON.stringify(items));
   window.dispatchEvent(new Event(CART_EVENT));
 }
 
@@ -73,14 +80,23 @@ export function useCart() {
 
   useEffect(() => {
     const sync = () => setItems(readCart());
+    const syncOnVisible = () => {
+      if (document.visibilityState === 'visible') {
+        sync();
+      }
+    };
     sync();
 
     window.addEventListener(CART_EVENT, sync);
     window.addEventListener('storage', sync);
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', syncOnVisible);
 
     return () => {
       window.removeEventListener(CART_EVENT, sync);
       window.removeEventListener('storage', sync);
+      window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', syncOnVisible);
     };
   }, []);
 

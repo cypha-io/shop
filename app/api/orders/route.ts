@@ -1,6 +1,9 @@
 import pg from 'pg';
+import { parseCookie, getUserBySessionToken } from '@/lib/serverAuth';
+import { evaluatePromotion } from '@/lib/promotions';
 
 const { Pool } = pg;
+const SESSION_COOKIE = 'wf_session';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -27,6 +30,7 @@ type CheckoutPayload = {
   subtotal: number;
   delivery: number;
   total: number;
+  promoCode?: string | null;
   items: CheckoutItemInput[];
 };
 
@@ -37,10 +41,57 @@ const parsePrice = (value: string) => {
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
-export async function GET() {
+const roundCurrency = (value: number) => Math.round(Math.max(0, value) * 100) / 100;
+
+export async function GET(request: Request) {
   let client;
 
   try {
+    const { searchParams } = new URL(request.url);
+    const requestedPhone = searchParams.get('phone')?.trim() || '';
+
+    // Try to get authenticated user
+    const token = parseCookie(request.headers.get('cookie'), SESSION_COOKIE);
+    let userId: number | null = null;
+    let userRole: string | null = null;
+
+    if (token) {
+      const user = await getUserBySessionToken(token);
+      if (user) {
+        userId = user.id;
+        userRole = user.role;
+      }
+    }
+
+    // Admins can see all orders.
+    // Non-admin users are scoped to their own identity and should only see:
+    // - Cash orders (created directly as valid orders)
+    // - Online orders with confirmed payment
+    const whereValues: Array<number | string> = [];
+    let baseScopeClause = '';
+
+    if (userRole !== 'admin') {
+      if (userId) {
+        whereValues.push(userId);
+        baseScopeClause = `o."userProfileId" = $${whereValues.length}`;
+      } else if (requestedPhone && isValidPhone(requestedPhone)) {
+        whereValues.push(requestedPhone);
+        baseScopeClause = `o.phone = $${whereValues.length}`;
+      } else {
+        baseScopeClause = '1=0';
+      }
+    }
+
+    const whereClause =
+      userRole === 'admin'
+        ? ''
+        : `WHERE ${baseScopeClause} AND (o."paymentMethod" = 'cash' OR COALESCE(o."paymentCompleted", FALSE) = TRUE)`;
+
+    const fallbackWhereClause =
+      userRole === 'admin'
+        ? ''
+        : `WHERE ${baseScopeClause} AND (o."paymentMethod" = 'cash' OR o.status IN ('Paid', 'Delivered', 'Cancelled'))`;
+
     client = await pool.connect();
     let result;
     try {
@@ -76,9 +127,10 @@ export async function GET() {
           ) AS items
         FROM "Order" o
         LEFT JOIN "OrderItem" oi ON oi."orderId" = o.id
+        ${whereClause}
         GROUP BY o.id
         ORDER BY o."createdAt" DESC
-      `);
+      `, whereValues);
     } catch (error) {
       if ((error as { code?: string }).code !== '42703') {
         throw error;
@@ -116,9 +168,10 @@ export async function GET() {
           ) AS items
         FROM "Order" o
         LEFT JOIN "OrderItem" oi ON oi."orderId" = o.id
+        ${fallbackWhereClause}
         GROUP BY o.id
         ORDER BY o."createdAt" DESC
-      `);
+      `, whereValues);
     }
 
     return Response.json(result.rows, {
@@ -139,8 +192,20 @@ export async function GET() {
 
 export async function POST(request: Request) {
   let client;
+  let transactionStarted = false;
 
   try {
+    // Try to get authenticated user
+    const token = parseCookie(request.headers.get('cookie'), SESSION_COOKIE);
+    let userId: number | null = null;
+
+    if (token) {
+      const user = await getUserBySessionToken(token);
+      if (user) {
+        userId = user.id;
+      }
+    }
+
     const body = (await request.json()) as CheckoutPayload;
     const provisionalOrderNumber = `TMP-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
 
@@ -154,6 +219,33 @@ export async function POST(request: Request) {
 
     if (!Array.isArray(body.items) || body.items.length === 0) {
       return Response.json({ error: 'Cart is empty' }, { status: 400 });
+    }
+
+    const computedSubtotal = roundCurrency(
+      body.items.reduce((sum, item) => {
+        const unitPrice = parsePrice(item.price);
+        const quantity = Math.max(1, Number(item.quantity) || 1);
+        return sum + unitPrice * quantity;
+      }, 0)
+    );
+    const computedDelivery = computedSubtotal > 0 ? 10 : 0;
+    const totalBeforeDiscount = roundCurrency(computedSubtotal + computedDelivery);
+
+    const promoCode = String(body.promoCode || '').trim().toUpperCase();
+    const promoEvaluation = promoCode ? await evaluatePromotion(promoCode, totalBeforeDiscount) : null;
+    if (promoCode && !promoEvaluation) {
+      return Response.json({ error: 'Invalid or ineligible promo code' }, { status: 400 });
+    }
+
+    const discountAmount = promoEvaluation?.discountAmount || 0;
+    const computedTotal = roundCurrency(totalBeforeDiscount - discountAmount);
+    const baseNotes = body.notes?.trim() || '';
+    const resolvedNotes = promoEvaluation
+      ? `${baseNotes}${baseNotes ? ' | ' : ''}Promo ${promoEvaluation.code}: -GH₵${promoEvaluation.discountAmount.toFixed(2)}`
+      : baseNotes || null;
+
+    if (computedTotal <= 0) {
+      return Response.json({ error: 'Order total must be greater than zero' }, { status: 400 });
     }
 
     client = await pool.connect();
@@ -172,8 +264,9 @@ export async function POST(request: Request) {
     const hasPaymentCompleted = Boolean(paymentCompletedColumnResult.rows[0]?.hasPaymentCompleted);
 
     await client.query('BEGIN');
+    transactionStarted = true;
 
-    const paymentCompleted = body.paymentMethod === 'card' || body.paymentMethod === 'mobile-money';
+    const paymentCompleted = false;
     const submittedProductIds = Array.from(
       new Set(
         body.items
@@ -199,8 +292,8 @@ export async function POST(request: Request) {
       orderInsert = await client.query(
         `
         INSERT INTO "Order"
-        ("orderNumber", "customerName", phone, email, address, city, notes, "paymentMethod", "paymentCompleted", status, subtotal, delivery, total)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Pending', $10, $11, $12)
+        ("orderNumber", "customerName", phone, email, address, city, notes, "paymentMethod", "paymentCompleted", status, subtotal, delivery, total, "userProfileId")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Pending', $10, $11, $12, $13)
         RETURNING id
         `,
         [
@@ -210,20 +303,21 @@ export async function POST(request: Request) {
           body.email?.trim() || null,
           body.address.trim(),
           body.city.trim(),
-          body.notes?.trim() || null,
+          resolvedNotes,
           body.paymentMethod,
           paymentCompleted,
-          body.subtotal,
-          body.delivery,
-          body.total,
+          computedSubtotal,
+          computedDelivery,
+          computedTotal,
+          userId,
         ]
       );
     } else {
       orderInsert = await client.query(
         `
         INSERT INTO "Order"
-        ("orderNumber", "customerName", phone, email, address, city, notes, "paymentMethod", status, subtotal, delivery, total)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Pending', $9, $10, $11)
+        ("orderNumber", "customerName", phone, email, address, city, notes, "paymentMethod", status, subtotal, delivery, total, "userProfileId")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Pending', $9, $10, $11, $12)
         RETURNING id
         `,
         [
@@ -233,11 +327,12 @@ export async function POST(request: Request) {
           body.email?.trim() || null,
           body.address.trim(),
           body.city.trim(),
-          body.notes?.trim() || null,
+          resolvedNotes,
           body.paymentMethod,
-          body.subtotal,
-          body.delivery,
-          body.total,
+          computedSubtotal,
+          computedDelivery,
+          computedTotal,
+          userId,
         ]
       );
     }
@@ -265,10 +360,17 @@ export async function POST(request: Request) {
     }
 
     await client.query('COMMIT');
+    transactionStarted = false;
 
     return Response.json({ id: orderId, orderNumber, status: 'Pending' }, { status: 201 });
   } catch (error) {
-    if (client) await client.query('ROLLBACK');
+    if (client && transactionStarted) {
+      try {
+        await client.query('ROLLBACK');
+      } catch {
+        // Preserve the original failure response if rollback itself cannot run.
+      }
+    }
     return Response.json(
       { error: 'Failed to create order', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }

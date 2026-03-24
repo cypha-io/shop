@@ -87,53 +87,67 @@ export default function ProductCard({
     return Math.round(((reg - sale) / reg) * 100);
   })();
 
+  const priceTextClass = isCompact ? 'text-xs' : 'text-sm';
+
   return (
     <Link
       href={cardHref}
-      className={`group block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md ${isSoldOut ? 'pointer-events-none opacity-75' : ''}`}
+      className={`group block overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_30px_-20px_rgba(15,23,42,0.55)] transition-all duration-300 hover:-translate-y-1.5 hover:border-slate-300 hover:shadow-[0_26px_55px_-24px_rgba(15,23,42,0.6)] ${isSoldOut ? 'pointer-events-none opacity-80' : ''}`}
     >
-      <div className={`relative overflow-hidden bg-slate-100 ${isCompact ? 'h-36' : 'h-52'}`}>
+      <div className={`relative overflow-hidden bg-gradient-to-br from-slate-100 via-slate-50 to-white ${isCompact ? 'h-40' : 'h-56'}`}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(249,115,22,0.2),transparent_42%)]" />
         <Image
           src={product.image}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.08]"
         />
 
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
+
         {showCategory && product.category ? (
-          <span className="absolute left-3 top-3 rounded-full border border-white/70 bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-slate-700 backdrop-blur">
+          <span className="absolute left-3 top-3 rounded-full border border-white/70 bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-700 backdrop-blur">
             {product.category}
           </span>
         ) : null}
 
         {discountPct !== null && !isSoldOut ? (
-          <span className="absolute right-3 top-3 rounded-full bg-orange-500 px-2 py-0.5 text-[11px] font-bold text-white shadow">
+          <span className="absolute right-3 top-3 rounded-full bg-orange-500 px-2.5 py-1 text-[11px] font-black text-white shadow">
             -{discountPct}%
           </span>
         ) : null}
 
         {isSoldOut ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <span className="rounded-full bg-white px-4 py-1.5 text-sm font-black uppercase tracking-widest text-slate-800 shadow">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <span className="rounded-full bg-white px-4 py-1.5 text-sm font-black uppercase tracking-[0.18em] text-slate-800 shadow">
               Sold Out
             </span>
           </div>
         ) : (
-          <span className="absolute bottom-3 right-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white/90 text-slate-700 shadow-sm backdrop-blur">
-            <FiShoppingCart className="text-base" />
-          </span>
+          <>
+            <span className="absolute bottom-3 left-3 rounded-full bg-orange-500 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow">
+              In stock
+            </span>
+            <span className="absolute bottom-3 right-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/95 text-slate-700 shadow-sm backdrop-blur transition-transform duration-300 group-hover:rotate-12 group-hover:scale-105">
+              <FiShoppingCart className="text-base" />
+            </span>
+          </>
         )}
       </div>
 
-      <div className={isCompact ? 'p-3 text-center' : 'p-4 text-center'}>
-        <h3 className={`line-clamp-2 font-semibold text-slate-900 ${isCompact ? 'text-base' : 'text-lg'}`}>{product.name}</h3>
+      <div className={isCompact ? 'p-3.5' : 'p-5'}>
+        <h3 className={`line-clamp-2 text-center font-black leading-tight text-slate-900 ${isCompact ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'}`}>{product.name}</h3>
 
-        <div className="mt-2 flex items-end justify-center gap-2">
-          <p className={`font-extrabold text-orange-500 ${isCompact ? 'text-base' : 'text-xl'}`}>{displayPrice}</p>
-          {showStruckRegular ? <p className="text-sm font-semibold text-slate-400 line-through">{regularPriceLabel}</p> : null}
+        <div className="mt-2 flex min-w-0 flex-col items-center">
+          <p className={`text-center font-black text-orange-500 whitespace-nowrap leading-none tracking-tight ${priceTextClass}`}>{displayPrice}</p>
+          {showStruckRegular ? <p className="mt-1 text-center pb-0.5 text-[10px] min-[361px]:text-[11px] sm:text-xs font-semibold text-slate-400 line-through whitespace-nowrap">{regularPriceLabel}</p> : null}
         </div>
 
-        {showViewLabel ? <p className="mt-2 text-sm font-medium text-slate-500">View details</p> : null}
+        {showViewLabel ? (
+          <p className="mt-2 text-center text-[10px] min-[361px]:text-[11px] font-black uppercase tracking-[0.14em] text-slate-500 transition-colors group-hover:text-slate-700">
+            Order now
+          </p>
+        ) : null}
       </div>
     </Link>
   );

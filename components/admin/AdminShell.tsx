@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   FiBarChart2,
   FiChevronDown,
@@ -34,6 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/orders', label: 'Orders', icon: FiShoppingBag },
   { href: '/admin/products', label: 'Products', icon: FiPackage },
   { href: '/admin/categories', label: 'Categories', icon: FiTag },
+  { href: '/admin/promotions', label: 'Promotions', icon: FiTag },
   { href: '/admin/analytics', label: 'Analytics', icon: FiGrid },
   { href: '/admin/users', label: 'Users', icon: FiUsers },
   { href: '/admin/settings', label: 'Settings', icon: FiSettings },
@@ -122,7 +123,17 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
 
 export default function AdminShell({ children, userDisplayName }: AdminShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      router.push('/account');
+      router.refresh();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -141,6 +152,11 @@ export default function AdminShell({ children, userDisplayName }: AdminShellProp
           <div className="mt-auto rounded-2xl bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Signed in as</p>
             <p className="mt-1 truncate text-sm font-bold text-slate-900">{userDisplayName}</p>
+            <button
+              onClick={handleLogout}
+              className="mt-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-300"
+            >Logout
+            </button>
           </div>
         </aside>
 

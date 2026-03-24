@@ -54,7 +54,11 @@ export default function UserDashboardPage() {
     const loadOrders = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/orders');
+        const storedPhone = window.localStorage.getItem('wf-user-phone')?.trim() || '';
+        const endpoint = storedPhone
+          ? `/api/orders?phone=${encodeURIComponent(storedPhone)}`
+          : '/api/orders';
+        const response = await fetch(endpoint);
         if (!response.ok) throw new Error('Failed to load orders');
         const data = (await response.json()) as Order[];
         setOrders(data);
